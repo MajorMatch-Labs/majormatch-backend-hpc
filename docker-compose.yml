@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Dịch vụ Cơ sở dữ liệu Vector ChromaDB
+  chromadb:
+    image: chromadb/chroma:0.5.5
+    container_name: majormatch-chromadb
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    volumes:
+      - chromadata:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - majormatch-hpc-net
+
+  # Dịch vụ Private AI Compute Engine (FastAPI)
+  backend-hpc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: majormatch-backend-hpc
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      - chromadb
+    volumes:
+      - .:/app
+      - ephemeral_data:/tmp/majormatch_ephemeral
+    environment:
+      - ENVIRONMENT=production
+      - HOST=0.0.0.0
+      - PORT=8000
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL_NAME=qwen2.5:7b-instruct-q4_k_m
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
+      - EPHEMERAL_STORAGE_PATH=/tmp/majormatch_ephemeral
+      - MAX_CONCURRENT_LLM_TASKS=1
+      - CORS_ORIGINS=*
+      - LOG_LEVEL=INFO
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - majormatch-hpc-net
+
+networks:
+  majormatch-hpc-net:
+    driver: bridge
+
+volumes:
+  chromadata:
+    driver: local
+  ephemeral_data:
+    driver: local
