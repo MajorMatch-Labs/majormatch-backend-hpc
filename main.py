@@ -200,7 +200,7 @@ async def get_curriculum(major_id: str):
 @app.get(
     "/api/v1/health",
     response_model=HealthCheckResponse,
-    summary="Kiểm tra trạng thái Gateway và mức chiếm dụng VRAM GPU RTX 4060",
+    summary="Kiểm tra trạng thái Gateway và mức chiếm dụng VRAM GPU Compute Node",
     tags=["System"]
 )
 async def health_check():
@@ -222,13 +222,13 @@ async def health_check():
     return HealthCheckResponse(
         status="healthy",
         gateway_node=GatewayNodeStatus(
-            device="Vsmart Joy 3",
-            os="Ubuntu 22.04 (Termux)",
+            device="Linux Edge Gateway Node",
+            os="Ubuntu 22.04 LTS",
             sqlite_cache_size_kb=1420
         ),
         private_compute_node=PrivateComputeNodeStatus(
-            device="Legion Pro i9-13900HX",
-            gpu_status="NVIDIA GeForce RTX 4060 Laptop GPU",
+            device="Private HPC Compute Node",
+            gpu_status="NVIDIA CUDA GPU",
             vram_used_mb=vram_used,
             vram_total_mb=vram_total,
             ollama_status="online",

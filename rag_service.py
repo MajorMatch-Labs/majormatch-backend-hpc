@@ -1,7 +1,7 @@
 """
 Dịch vụ RAG (Retrieval-Augmented Generation) và Tích hợp Mô hình Ngôn ngữ Lớn Ollama Qwen 2.5.
 Quản lý ChromaDB Vectorstore lưu trữ khung chương trình đào tạo, kiểm tra môn tiên quyết
-và điều phối suy luận AI trên GPU RTX 4060 sinh cấu trúc lộ trình cá nhân hóa JSON.
+và điều phối suy luận AI trên Dedicated GPU Node sinh cấu trúc lộ trình cá nhân hóa JSON.
 """
 
 import os
@@ -28,7 +28,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL_NAME", "qwen2.5:7b-instruct-q4_k_m")
 CHROMADB_HOST = os.getenv("CHROMADB_HOST", "localhost")
 CHROMADB_PORT = int(os.getenv("CHROMADB_PORT", "8001"))
 
-# Semaphore bảo vệ VRAM GPU RTX 4060: Chỉ xử lý tối đa 1 tác vụ LLM đồng thời
+# Semaphore bảo vệ VRAM GPU: Chỉ xử lý tối đa 1 tác vụ LLM đồng thời
 GPU_SEMAPHORE = asyncio.Semaphore(1)
 
 
