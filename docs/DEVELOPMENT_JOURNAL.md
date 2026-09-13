@@ -29,3 +29,13 @@
   - **Tầng 2 (Local Model)**: Đảm nhận bài toán định tính ngôn ngữ, sử dụng Ollama `qwen2.5:7b` trên GPU RTX 4060 để diễn giải kết quả, RAG sinh lộ trình học tập và trợ lý ảo Streaming Chatbot.
 - **Quyết định Huấn luyện Model ML Thực thụ**:
   - Thống nhất bổ sung quy trình Train Model thực sự (`train.py`) với tập dữ liệu sinh viên mẫu `students_training.csv` (2.000 dòng) để phục vụ chấm điểm bài tập lớn và thuyết trình đồ án trước hội đồng.
+
+### Ngày 13/09/2026 - Hoàn thành Bước 2: Tạo Bộ Dữ Liệu Huấn Luyện (Dataset Preparation)
+- **Tập dữ liệu chuẩn hóa**: Đã viết script `ml/dataset/generate_dataset.py` và sinh thành công `ml/dataset/students_training.csv` (2.000 dòng x 17 cột).
+- **Phân phối nhãn cân bằng hoàn hảo**: Đúng 400 mẫu cho mỗi chuyên ngành trong số 5 ngành (`CS_DATA_AI`, `SE_FULLSTACK`, `DEVOPS_CLOUD`, `CYBER_SECURITY`, `DATA_ANALYTICS`).
+- **Đặc trưng học tập**:
+  - 8 môn học cơ sở: `CS101`, `CS102`, `MTH100`, `MTH101`, `IT201`, `IT202`, `IT203`, `SE201` (thang điểm 4.0).
+  - Điểm GPA tích lũy (`gpa_accumulated`).
+  - 6 nhóm tâm lý học sở thích Holland RIASEC (`holland_r`, `holland_i`, `holland_a`, `holland_s`, `holland_e`, `holland_c` từ 1.0 - 5.0).
+- **Sẵn sàng huấn luyện**: Tập dữ liệu đã sẵn sàng để bước sang **Bước 3: Huấn luyện mô hình phân loại đa lớp (`train.py`)**.
+
