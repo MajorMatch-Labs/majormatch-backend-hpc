@@ -1,0 +1,59 @@
+{
+  "evaluation_metric": "Stratified 5-Fold Cross Validation",
+  "leaderboard": [
+    {
+      "algorithm": "Gradient Boosting (Traditional)",
+      "accuracy": 80.75,
+      "balanced_accuracy": 78.07,
+      "macro_f1": 78.15,
+      "weighted_f1": 80.37,
+      "cv_duration_sec": 55.19,
+      "latency_ms_per_sample": 0.025
+    },
+    {
+      "algorithm": "Hist Gradient Boosting (Tree Boosting)",
+      "accuracy": 79.63,
+      "balanced_accuracy": 78.83,
+      "macro_f1": 77.67,
+      "weighted_f1": 79.76,
+      "cv_duration_sec": 3.81,
+      "latency_ms_per_sample": 0.2
+    },
+    {
+      "algorithm": "Logistic Regression (Multinomial L2)",
+      "accuracy": 79.99,
+      "balanced_accuracy": 80.08,
+      "macro_f1": 77.51,
+      "weighted_f1": 80.31,
+      "cv_duration_sec": 1.41,
+      "latency_ms_per_sample": 0.0
+    },
+    {
+      "algorithm": "Random Forest (Ensemble Bagging)",
+      "accuracy": 77.42,
+      "balanced_accuracy": 76.15,
+      "macro_f1": 74.93,
+      "weighted_f1": 77.02,
+      "cv_duration_sec": 4.49,
+      "latency_ms_per_sample": 0.291
+    },
+    {
+      "algorithm": "Extra Trees (Randomized Forest)",
+      "accuracy": 77.61,
+      "balanced_accuracy": 77.74,
+      "macro_f1": 74.58,
+      "weighted_f1": 77.22,
+      "cv_duration_sec": 2.32,
+      "latency_ms_per_sample": 0.341
+    }
+  ],
+  "best_algorithm": {
+    "algorithm": "Gradient Boosting (Traditional)",
+    "accuracy": 80.75,
+    "balanced_accuracy": 78.07,
+    "macro_f1": 78.15,
+    "weighted_f1": 80.37,
+    "cv_duration_sec": 55.19,
+    "latency_ms_per_sample": 0.025
+  }
+}

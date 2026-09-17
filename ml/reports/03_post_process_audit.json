@@ -1,0 +1,141 @@
+{
+  "total_records": 20000,
+  "total_features": 20,
+  "classes": {
+    "0": "CS_DATA_AI",
+    "1": "CYBER_SECURITY",
+    "2": "DATA_ANALYTICS",
+    "3": "DEVOPS_CLOUD",
+    "4": "SE_FULLSTACK"
+  },
+  "high_correlation_pairs": [
+    {
+      "feature_1": "HOLLAND_A",
+      "feature_2": "RATIO_C_A",
+      "correlation": 0.921
+    }
+  ],
+  "feature_ranking": [
+    {
+      "feature": "RATIO_I_E",
+      "f_value": 2140.98,
+      "p_value": 0.0,
+      "mutual_info": 0.2773
+    },
+    {
+      "feature": "HOLLAND_E",
+      "f_value": 2072.3,
+      "p_value": 0.0,
+      "mutual_info": 0.1802
+    },
+    {
+      "feature": "HOLLAND_I",
+      "f_value": 1634.06,
+      "p_value": 0.0,
+      "mutual_info": 0.1468
+    },
+    {
+      "feature": "AVG_SYS",
+      "f_value": 1505.74,
+      "p_value": 0.0,
+      "mutual_info": 0.1789
+    },
+    {
+      "feature": "CS204",
+      "f_value": 1220.11,
+      "p_value": 0.0,
+      "mutual_info": 0.0921
+    },
+    {
+      "feature": "CS201",
+      "f_value": 1196.31,
+      "p_value": 0.0,
+      "mutual_info": 0.0963
+    },
+    {
+      "feature": "HOLLAND_C",
+      "f_value": 679.65,
+      "p_value": 0.0,
+      "mutual_info": 0.1237
+    },
+    {
+      "feature": "CS203",
+      "f_value": 678.2,
+      "p_value": 0.0,
+      "mutual_info": 0.0911
+    },
+    {
+      "feature": "AVG_DEV",
+      "f_value": 612.94,
+      "p_value": 0.0,
+      "mutual_info": 0.058
+    },
+    {
+      "feature": "MATH101",
+      "f_value": 585.88,
+      "p_value": 0.0,
+      "mutual_info": 0.0745
+    },
+    {
+      "feature": "CS205",
+      "f_value": 584.65,
+      "p_value": 0.0,
+      "mutual_info": 0.0987
+    },
+    {
+      "feature": "CS101",
+      "f_value": 300.8,
+      "p_value": 1.1018336606579043e-251,
+      "mutual_info": 0.016
+    },
+    {
+      "feature": "CS202",
+      "f_value": 291.96,
+      "p_value": 1.9128575180247546e-244,
+      "mutual_info": 0.0288
+    },
+    {
+      "feature": "AVG_MATH_THEORY",
+      "f_value": 265.35,
+      "p_value": 1.3556081442985059e-222,
+      "mutual_info": 0.0291
+    },
+    {
+      "feature": "HOLLAND_R",
+      "f_value": 163.3,
+      "p_value": 8.526433737355376e-138,
+      "mutual_info": 0.0358
+    },
+    {
+      "feature": "GPA",
+      "f_value": 131.26,
+      "p_value": 7.403053862205995e-111,
+      "mutual_info": 0.0116
+    },
+    {
+      "feature": "RATIO_C_A",
+      "f_value": 33.19,
+      "p_value": 1.2315478353041637e-27,
+      "mutual_info": 0.0318
+    },
+    {
+      "feature": "HOLLAND_S",
+      "f_value": 1.36,
+      "p_value": 0.2465372211055005,
+      "mutual_info": 0.0
+    },
+    {
+      "feature": "HOLLAND_A",
+      "f_value": 0.56,
+      "p_value": 0.6931847383880156,
+      "mutual_info": 0.0
+    },
+    {
+      "feature": "PHYS101",
+      "f_value": 0.5,
+      "p_value": 0.7339984921350653,
+      "mutual_info": 0.0084
+    }
+  ],
+  "data_leakage": false
+}

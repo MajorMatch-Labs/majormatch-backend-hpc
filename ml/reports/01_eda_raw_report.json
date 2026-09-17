@@ -1,0 +1,121 @@
+{
+  "dataset_path": "c:\\mydata\\selfproject\\AIO_project\\backend-hpc\\ml\\dataset\\students_real.csv",
+  "total_records": 20000,
+  "total_features": 16,
+  "missing_values_count": 0,
+  "duplicates_count": 0,
+  "target_distribution": {
+    "CS_DATA_AI": {
+      "count": 5803,
+      "percentage": 29.02
+    },
+    "CYBER_SECURITY": {
+      "count": 5449,
+      "percentage": 27.25
+    },
+    "DATA_ANALYTICS": {
+      "count": 4103,
+      "percentage": 20.52
+    },
+    "SE_FULLSTACK": {
+      "count": 3361,
+      "percentage": 16.8
+    },
+    "DEVOPS_CLOUD": {
+      "count": 1284,
+      "percentage": 6.42
+    }
+  },
+  "outlier_summary": {
+    "CS101": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.64,
+      "upper_bound": 4.52
+    },
+    "CS201": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.64,
+      "upper_bound": 4.52
+    },
+    "CS202": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.64,
+      "upper_bound": 4.52
+    },
+    "CS203": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.64,
+      "upper_bound": 4.52
+    },
+    "CS204": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.7,
+      "upper_bound": 4.42
+    },
+    "MATH101": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.64,
+      "upper_bound": 4.52
+    },
+    "PHYS101": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.64,
+      "upper_bound": 4.52
+    },
+    "CS205": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.64,
+      "upper_bound": 4.52
+    },
+    "GPA": {
+      "outlier_count": 53,
+      "outlier_percentage": 0.27,
+      "lower_bound": 2.68,
+      "upper_bound": 3.48
+    },
+    "HOLLAND_R": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 2.67,
+      "upper_bound": 3.95
+    },
+    "HOLLAND_I": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 1.67,
+      "upper_bound": 5.62
+    },
+    "HOLLAND_A": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 0.25,
+      "upper_bound": 5.93
+    },
+    "HOLLAND_S": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 0.73,
+      "upper_bound": 5.74
+    },
+    "HOLLAND_E": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 0.9,
+      "upper_bound": 5.7
+    },
+    "HOLLAND_C": {
+      "outlier_count": 0,
+      "outlier_percentage": 0.0,
+      "lower_bound": 2.91,
+      "upper_bound": 4.91
+    }
+  }
+}
