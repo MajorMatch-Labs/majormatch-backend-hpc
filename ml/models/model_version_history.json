@@ -1,0 +1,10 @@
+[
+  {
+    "version": "v1.1",
+    "timestamp": "2026-09-17 08:12:36",
+    "total_samples": 20000,
+    "accuracy": 76.8,
+    "macro_f1": 74.11,
+    "status": "PROMOTED"
+  }
+]

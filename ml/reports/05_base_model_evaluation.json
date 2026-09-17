@@ -1,0 +1,110 @@
+{
+  "test_size": 4000,
+  "accuracy": 77.35,
+  "macro_f1": 74.17,
+  "weighted_f1": 76.5,
+  "confusion_matrix": [
+    [
+      1011,
+      26,
+      36,
+      15,
+      72
+    ],
+    [
+      49,
+      911,
+      38,
+      9,
+      83
+    ],
+    [
+      21,
+      29,
+      711,
+      9,
+      51
+    ],
+    [
+      10,
+      11,
+      3,
+      202,
+      31
+    ],
+    [
+      146,
+      138,
+      87,
+      42,
+      259
+    ]
+  ],
+  "classification_report": {
+    "CS_DATA_AI": {
+      "precision": 0.8172999191592563,
+      "recall": 0.871551724137931,
+      "f1-score": 0.8435544430538173,
+      "support": 1160.0
+    },
+    "CYBER_SECURITY": {
+      "precision": 0.8170403587443946,
+      "recall": 0.8357798165137614,
+      "f1-score": 0.8263038548752835,
+      "support": 1090.0
+    },
+    "DATA_ANALYTICS": {
+      "precision": 0.8125714285714286,
+      "recall": 0.8660170523751523,
+      "f1-score": 0.8384433962264151,
+      "support": 821.0
+    },
+    "DEVOPS_CLOUD": {
+      "precision": 0.7292418772563177,
+      "recall": 0.7859922178988327,
+      "f1-score": 0.7565543071161048,
+      "support": 257.0
+    },
+    "SE_FULLSTACK": {
+      "precision": 0.5221774193548387,
+      "recall": 0.3854166666666667,
+      "f1-score": 0.4434931506849315,
+      "support": 672.0
+    },
+    "accuracy": 0.7735,
+    "macro avg": {
+      "precision": 0.7396662006172472,
+      "recall": 0.7489514955184687,
+      "f1-score": 0.7416698303913104,
+      "support": 4000.0
+    },
+    "weighted avg": {
+      "precision": 0.7610203570936488,
+      "recall": 0.7735,
+      "f1-score": 0.7650045595618717,
+      "support": 4000.0
+    }
+  },
+  "feature_importances": {
+    "CS205": 0.0926,
+    "AVG_SYS": 0.0924,
+    "RATIO_I_E": 0.0875,
+    "HOLLAND_C": 0.0818,
+    "HOLLAND_E": 0.0815,
+    "HOLLAND_I": 0.0771,
+    "CS204": 0.0638,
+    "CS201": 0.0613,
+    "MATH101": 0.0545,
+    "AVG_DEV": 0.0462,
+    "CS203": 0.0375,
+    "CS202": 0.0329,
+    "CS101": 0.0322,
+    "AVG_MATH_THEORY": 0.0294,
+    "HOLLAND_R": 0.0269,
+    "GPA": 0.0264,
+    "RATIO_C_A": 0.023,
+    "PHYS101": 0.0194,
+    "HOLLAND_A": 0.0169,
+    "HOLLAND_S": 0.0167
+  }
+}

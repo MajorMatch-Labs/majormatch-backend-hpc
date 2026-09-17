@@ -1,0 +1,95 @@
+{
+  "model_type": "Hybrid Soft Voting Ensemble",
+  "weights": [
+    2.0,
+    1.5,
+    1.0
+  ],
+  "test_size": 4000,
+  "accuracy": 80.8,
+  "macro_f1": 78.71,
+  "weighted_f1": 80.76,
+  "log_loss": 0.511,
+  "confusion_matrix": [
+    [
+      1000,
+      8,
+      21,
+      16,
+      115
+    ],
+    [
+      11,
+      928,
+      22,
+      9,
+      120
+    ],
+    [
+      7,
+      6,
+      739,
+      7,
+      62
+    ],
+    [
+      2,
+      3,
+      0,
+      230,
+      22
+    ],
+    [
+      111,
+      107,
+      67,
+      52,
+      335
+    ]
+  ],
+  "classification_report": {
+    "CS_DATA_AI": {
+      "precision": 0.8841732979664014,
+      "recall": 0.8620689655172413,
+      "f1-score": 0.8729812309035355,
+      "support": 1160.0
+    },
+    "CYBER_SECURITY": {
+      "precision": 0.8821292775665399,
+      "recall": 0.8513761467889909,
+      "f1-score": 0.8664799253034547,
+      "support": 1090.0
+    },
+    "DATA_ANALYTICS": {
+      "precision": 0.8704358068315665,
+      "recall": 0.9001218026796589,
+      "f1-score": 0.8850299401197604,
+      "support": 821.0
+    },
+    "DEVOPS_CLOUD": {
+      "precision": 0.732484076433121,
+      "recall": 0.8949416342412452,
+      "f1-score": 0.8056042031523643,
+      "support": 257.0
+    },
+    "SE_FULLSTACK": {
+      "precision": 0.5122324159021406,
+      "recall": 0.49851190476190477,
+      "f1-score": 0.5052790346907994,
+      "support": 672.0
+    },
+    "accuracy": 0.808,
+    "macro avg": {
+      "precision": 0.7762909749399539,
+      "recall": 0.8014040907978082,
+      "f1-score": 0.7870748668339829,
+      "support": 4000.0
+    },
+    "weighted avg": {
+      "precision": 0.8085645816817051,
+      "recall": 0.808,
+      "f1-score": 0.8075796796973912,
+      "support": 4000.0
+    }
+  }
+}
