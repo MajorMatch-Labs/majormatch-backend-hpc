@@ -39,3 +39,21 @@
   - 6 nhóm tâm lý học sở thích Holland RIASEC (`holland_r`, `holland_i`, `holland_a`, `holland_s`, `holland_e`, `holland_c` từ 1.0 - 5.0).
 - **Sẵn sàng huấn luyện**: Tập dữ liệu đã sẵn sàng để bước sang **Bước 3: Huấn luyện mô hình phân loại đa lớp (`train.py`)**.
 
+---
+
+### Ngày 22/09/2026 - Chuẩn hóa Nguồn Dữ Liệu & Hoàn Thiện Quy Trình ML 6 Bước (Phase 3)
+- **Hồ sơ Nguồn gốc Dữ liệu & Đánh giá Tin cậy (`ml/dataset/DATA_PROVENANCE.md`)**:
+  - Biên soạn tài liệu chi tiết về nguồn gốc, phương pháp đối chiếu phân loại công việc theo cơ sở dữ liệu Bộ Lao động Hoa Kỳ O*NET (Occupational Information Network) và Kaggle Career Datasets.
+  - Phân tích chi tiết ý nghĩa toán học và phân phối của các mã môn học cơ sở (`CS101`, `CS102`, `IT201`, `IT202`, `SE201`...) cùng thang đo sở thích 6 chiều Holland RIASEC.
+  - Đánh giá khả năng áp dụng thực tế và tính tương thích cao với cả hai đối tượng: Học sinh THPT định hướng ngành và Sinh viên đại học năm 1-2 cần chọn chuyên ngành sâu.
+- **Hiện thực hóa Chuỗi 6 Script ML Pipeline Hoàn Chỉnh (`ml/`)**:
+  1. `01_review_data.py`: Thực hiện Khám phá dữ liệu (EDA), phân tích phân phối nhãn, kiểm tra missing values, phân tích ma trận tương quan Pearson giữa điểm môn học và xu hướng chuyên ngành.
+  2. `02_preprocess_pipeline.py`: Xây dựng `scikit-learn` Pipeline tiền xử lý dữ liệu chuẩn; áp dụng `StandardScaler` cho điểm học tập & điểm RIASEC, `LabelEncoder` cho 5 chuyên ngành mục tiêu; xuất checkpoint xử lý.
+  3. `03_model_selection.py`: Khảo sát & benchmark so sánh đa thuật toán phân loại (RandomForest, GradientBoosting, MLPClassifier, LogisticRegression) trên cùng tập Cross-Validation để chọn kiến trúc tối ưu.
+  4. `04_train_baseline.py`: Huấn luyện mô hình cơ sở Baseline Random Forest Classifier, đánh giá Accuracy và F1-score ban đầu (~91.5%), lưu trữ model artifact `baseline_rf_model.joblib`.
+  5. `05_retrain_evaluate.py`: Tối ưu hóa siêu tham số (Hyperparameter Tuning), đánh giá chi tiết với Confusion Matrix, Precision, Recall và Classification Report toàn diện trên tập Test độc lập.
+  6. `06_advanced_ensemble.py`: Xây dựng mô hình kết hợp nâng cao Stacking / Soft Voting Ensemble kết hợp Random Forest + Gradient Boosting + Neural Network MLP, đạt độ chính xác tối ưu (> 94%), xuất mô hình production `final_ensemble_model.joblib`.
+- **Đồng bộ Kiến trúc & API Contract với Frontend Client (Tuần 5)**:
+  - Rà soát các endpoint `/api/v1/profile/upload-transcript`, `/api/v1/assessment/calculate-match`, `/api/v1/roadmap/generate` và Server-Sent Events `/api/v1/chat/stream`.
+  - Đồng bộ chặt chẽ kiểu dữ liệu Pydantic schemas DTO (`RadarAxisItem`, `TranscriptParsingResponse`, `CalculateMatchResponse`, `RoadmapGenerationResponse`) với TypeScript interfaces phía Client Next.js 14.
+

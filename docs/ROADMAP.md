@@ -65,8 +65,8 @@ Lộ trình triển khai Backend HPC được chia thành 6 bước tuần tự,
 
 ## TIẾN ĐỘ THỰC TẾ
 - [x] **Bước 1**: Môi trường & Thư viện (Hoàn thành 11/09/2026)
-- [x] **Bước 2**: Bộ dữ liệu huấn luyện `students_training.csv` (Hoàn thành 13/09/2026)
-- [ ] **Bước 3**: Script huấn luyện `train.py` & Checkpoint `.joblib`
+- [x] **Bước 2**: Bộ dữ liệu huấn luyện `students_training.csv` & `DATA_PROVENANCE.md` (Hoàn thành 13/09/2026 - 22/09/2026)
+- [x] **Bước 3**: Quy trình ML Pipeline 6 bước (`01_review_data.py` -> `06_advanced_ensemble.py`) & Checkpoint `.joblib` (Hoàn thành 22/09/2026)
 - [ ] **Bước 4**: Tích hợp Model vào `ml_engine.py`
 - [ ] **Bước 5**: Tầng Local Model & RAG Fallback
 - [ ] **Bước 6**: Khởi chạy Server, Swagger Test & Đồng bộ Git
