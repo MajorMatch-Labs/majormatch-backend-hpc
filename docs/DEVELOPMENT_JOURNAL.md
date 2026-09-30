@@ -57,3 +57,10 @@
   - Rà soát các endpoint `/api/v1/profile/upload-transcript`, `/api/v1/assessment/calculate-match`, `/api/v1/roadmap/generate` và Server-Sent Events `/api/v1/chat/stream`.
   - Đồng bộ chặt chẽ kiểu dữ liệu Pydantic schemas DTO (`RadarAxisItem`, `TranscriptParsingResponse`, `CalculateMatchResponse`, `RoadmapGenerationResponse`) với TypeScript interfaces phía Client Next.js 14.
 
+---
+
+### Ngày 30/09/2026 - Tích hợp Streaming SSE & Ngữ Cảnh Kỹ Năng Thiếu (Tuần 6)
+- **Tầng Client-Backend Streaming Contract**:
+  - Chuẩn hóa gói tin POST `/api/v1/chat/stream` tiếp nhận bổ sung `mastered_skills` và `missing_skills` từ hồ sơ sinh viên để làm giàu ngữ cảnh Prompt cho Ollama Qwen 2.5 7B.
+  - Phía Client hiện thực bộ giải mã dòng `SseLineBufferParser` đảm bảo token tiếng Việt có dấu không bị vỡ và tự động ngắt kết nối với cờ `[DONE]`.
+
