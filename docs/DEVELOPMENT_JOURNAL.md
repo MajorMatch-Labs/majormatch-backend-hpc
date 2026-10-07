@@ -64,3 +64,12 @@
   - Chuẩn hóa gói tin POST `/api/v1/chat/stream` tiếp nhận bổ sung `mastered_skills` và `missing_skills` từ hồ sơ sinh viên để làm giàu ngữ cảnh Prompt cho Ollama Qwen 2.5 7B.
   - Phía Client hiện thực bộ giải mã dòng `SseLineBufferParser` đảm bảo token tiếng Việt có dấu không bị vỡ và tự động ngắt kết nối với cờ `[DONE]`.
 
+---
+
+### Ngày 07/10/2026 - Chuẩn hóa Cấu trúc Kỹ năng Lộ trình Học kỳ & RAG Integration (Tuần 7)
+- **Tầng Schemas & Data Contract**:
+  - Mở rộng Pydantic models trong `schemas.py`: bổ sung `target_skills: List[str]` vào `RecommendedCourse` và `milestone_skills: List[str]` vào `SemesterMilestone`.
+  - Cập nhật hàm sinh lộ trình dự phòng `_fallback_deterministic_roadmap` tại `rag_service.py` đảm bảo mỗi học kỳ và môn học đều đi kèm danh mục kỹ năng đầu ra định lượng cụ thể.
+- **Tương thích Client-Backend**:
+  - Đảm bảo tính nhất quán dữ liệu giữa FastAPI Backend và Next.js Client khi render cây lộ trình `MilestoneTree.tsx`, phục vụ đợt đánh giá tiến độ chuyên đề và đề cương đồ án.
+
