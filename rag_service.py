@@ -312,6 +312,7 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
                     course_name=c["course_name"],
                     credits=c.get("credits", 3),
                     rationale=f"Môn học cốt lõi cung cấp kiến thức nền tảng về {c['course_name']}.",
+                    target_skills=[c["course_name"], "Problem Solving"],
                     prerequisites_satisfied=True
                 )
             )
@@ -320,6 +321,7 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
             SemesterMilestone(
                 semester_number=next_sem,
                 semester_title=f"Học kỳ {next_sem}: Bồi đắp Kiến thức Chuyên môn Cốt lõi",
+                milestone_skills=request.missing_skills[:4] if request.missing_skills else ["Core Algorithms", "System Architecture"],
                 recommended_courses=rec_courses,
                 certifications=["AWS Certified Cloud Practitioner", "Coursera Deep Learning"],
                 practical_project=PracticalProject(

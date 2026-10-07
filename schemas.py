@@ -122,6 +122,7 @@ class RecommendedCourse(BaseModel):
     course_name: str = Field(..., description="Tên môn học")
     credits: int = Field(..., ge=1, le=6, description="Số tín chỉ")
     rationale: str = Field(..., description="Lý do đề xuất môn này")
+    target_skills: List[str] = Field(default_factory=list, description="Kỹ năng cụ thể học phần cung cấp")
     prerequisites_satisfied: bool = Field(True, description="Điều kiện tiên quyết đã thỏa mãn")
 
 
@@ -138,6 +139,7 @@ class SemesterMilestone(BaseModel):
 
     semester_number: int = Field(..., description="Số thứ tự học kỳ")
     semester_title: str = Field(..., description="Tiêu đề học kỳ")
+    milestone_skills: List[str] = Field(default_factory=list, description="Kỹ năng chuẩn đầu ra của học kỳ")
     recommended_courses: List[RecommendedCourse] = Field(default_factory=list)
     certifications: List[str] = Field(default_factory=list, description="Chứng chỉ quốc tế đề xuất")
     practical_project: PracticalProject
