@@ -107,16 +107,17 @@ class CalculateMatchResponse(BaseModel):
 # =============================================================================
 
 class RoadmapGenerationRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     target_major_id: str = Field(..., description="Mã chuyên ngành mục tiêu", example="CS_DATA_AI")
     missing_skills: List[str] = Field(default_factory=list, description="Danh sách kỹ năng cần bù đắp")
     completed_course_codes: List[str] = Field(default_factory=list, description="Mã các môn đã hoàn thành")
     current_semester: int = Field(..., ge=1, le=10, description="Học kỳ hiện tại của sinh viên", example=4)
+    cumulative_gpa: Optional[float] = Field(None, description="Điểm trung bình tích lũy hiện tại")
 
 
 class RecommendedCourse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     course_code: str = Field(..., description="Mã môn học")
     course_name: str = Field(..., description="Tên môn học")
@@ -127,7 +128,7 @@ class RecommendedCourse(BaseModel):
 
 
 class PracticalProject(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     project_title: str = Field(..., description="Tên đề tài đồ án")
     description: str = Field(..., description="Mô tả đồ án thực chiến")
@@ -135,18 +136,18 @@ class PracticalProject(BaseModel):
 
 
 class SemesterMilestone(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     semester_number: int = Field(..., description="Số thứ tự học kỳ")
     semester_title: str = Field(..., description="Tiêu đề học kỳ")
     milestone_skills: List[str] = Field(default_factory=list, description="Kỹ năng chuẩn đầu ra của học kỳ")
     recommended_courses: List[RecommendedCourse] = Field(default_factory=list)
     certifications: List[str] = Field(default_factory=list, description="Chứng chỉ quốc tế đề xuất")
-    practical_project: PracticalProject
+    practical_project: Optional[PracticalProject] = None
 
 
 class RoadmapGenerationResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     target_major: str = Field(..., description="Tên chuyên ngành mục tiêu")
     job_readiness_percentage: float = Field(..., ge=0.0, le=100.0, description="Tỷ lệ sẵn sàng nghề nghiệp")
@@ -166,11 +167,16 @@ class ChatContext(BaseModel):
 
 
 class ChatStreamRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
-    conversation_id: str = Field(..., description="ID phiên trò chuyện")
+    conversation_id: Optional[str] = Field(default_factory=lambda: "conv-default", description="ID phiên trò chuyện")
     message: str = Field(..., min_length=1, description="Nội dung câu hỏi của người dùng")
     context: Optional[ChatContext] = None
+    major_focus: Optional[str] = None
+    gpa: Optional[float] = None
+    mastered_skills: Optional[List[str]] = None
+    missing_skills: Optional[List[str]] = None
+    student_profile_context: Optional[str] = None
 
 
 # =============================================================================
