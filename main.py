@@ -4,6 +4,9 @@ Hiện thực hóa toàn bộ các Endpoints theo chuẩn OpenAPI 3.1 và API_SP
 """
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 import time
 import subprocess
 from typing import List, Dict, Any
