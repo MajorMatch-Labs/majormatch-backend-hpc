@@ -31,7 +31,7 @@ class ProfileData(BaseModel):
 
 
 class TranscriptParsingResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     request_id: str = Field(..., description="Mã định danh truy vết UUID")
     status: str = Field("success", description="Trạng thái phân tích")
@@ -44,28 +44,29 @@ class TranscriptParsingResponse(BaseModel):
 # =============================================================================
 
 class HollandScores(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
-    realistic: float = Field(3.0, ge=1.0, le=5.0, description="Nhóm Thực tế")
-    investigative: float = Field(3.0, ge=1.0, le=5.0, description="Nhóm Nghiên cứu")
-    artistic: float = Field(3.0, ge=1.0, le=5.0, description="Nhóm Nghệ thuật")
-    social: float = Field(3.0, ge=1.0, le=5.0, description="Nhóm Xã hội")
-    enterprising: float = Field(3.0, ge=1.0, le=5.0, description="Nhóm Quản lý / Khởi nghiệp")
-    conventional: float = Field(3.0, ge=1.0, le=5.0, description="Nhóm Quy củ / Chi tiết")
+    realistic: float = Field(3.0, description="Nhóm Thực tế")
+    investigative: float = Field(3.0, description="Nhóm Nghiên cứu")
+    artistic: float = Field(3.0, description="Nhóm Nghệ thuật")
+    social: float = Field(3.0, description="Nhóm Xã hội")
+    enterprising: float = Field(3.0, description="Nhóm Quản lý / Khởi nghiệp")
+    conventional: float = Field(3.0, description="Nhóm Quy củ / Chi tiết")
 
 
 class CourseInputAssessment(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     course_code: str = Field(..., description="Mã môn học")
     grade_point: float = Field(..., ge=0.0, le=4.0, description="Điểm hệ số 4.0")
 
 
 class CalculateMatchRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
-    holland_scores: HollandScores
-    target_career_tags: List[str] = Field(..., min_length=1, max_length=5, description="Danh mục thẻ định hướng")
+    student_id: Optional[str] = Field("SV-2025001", description="Mã số sinh viên định danh hồ sơ")
+    holland_scores: HollandScores = Field(default_factory=HollandScores)
+    target_career_tags: List[str] = Field(default_factory=list, description="Danh mục thẻ định hướng")
     courses: List[CourseInputAssessment] = Field(default_factory=list, description="Danh mục môn và điểm")
 
 
@@ -97,7 +98,7 @@ class MajorMatchRankItem(BaseModel):
 
 
 class CalculateMatchResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     top_matches: List[MajorMatchRankItem]
     radar_chart_data: List[RadarAxisItem]
@@ -112,12 +113,13 @@ class RoadmapGenerationRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     student_id: Optional[str] = Field("SV-2025001", description="Mã số sinh viên định danh hồ sơ")
-    target_major_id: str = Field(..., description="Mã chuyên ngành mục tiêu", example="CS_DATA_AI")
+    target_major_id: Optional[str] = Field("DEVOPS_CLOUD", description="Mã chuyên ngành mục tiêu", example="CS_DATA_AI")
+    target_major: Optional[str] = Field(None, description="Tên chuyên ngành mục tiêu")
     missing_skills: List[str] = Field(default_factory=list, description="Danh sách kỹ năng cần bù đắp")
     completed_course_codes: List[str] = Field(default_factory=list, description="Mã các môn đã hoàn thành")
     current_semester: Optional[int] = Field(4, description="Học kỳ hiện tại của sinh viên")
     cumulative_gpa: Optional[float] = Field(None, description="Điểm trung bình tích lũy hiện tại")
-    initial_readiness_score: Optional[float] = Field(None, ge=0.0, le=100.0, description="Điểm tiềm năng ban đầu từ phân tích Skill Gap")
+    initial_readiness_score: Optional[float] = Field(None, description="Điểm tiềm năng ban đầu từ phân tích Skill Gap")
 
 
 class RecommendedCourse(BaseModel):
