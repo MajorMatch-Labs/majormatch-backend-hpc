@@ -779,6 +779,20 @@ def compute_skill_assessment_locally(body_data: Dict[str, Any]) -> Dict[str, Any
                 {"axis": "Bảo mật Ứng dụng Web", "benchmark_score": 8.2, "user_score": 6.5},
                 {"axis": "Phân tích Mã độc", "benchmark_score": 7.8, "user_score": 5.0}
             ]
+        },
+        {
+            "id": "DATA_ANALYTICS",
+            "name": "Phân tích Dữ liệu Kinh doanh (Data Analytics & BI)",
+            "desc": "Khai thác dữ liệu lớn, xây dựng Dashboard Power BI/Tableau và phân tích hành vi khách hàng.",
+            "required": ["SQL", "Python", "Data Analysis", "Data Modeling", "Probability & Statistics", "Pandas", "Database"],
+            "base_radar": [
+                {"axis": "Truy vấn & Mô hình hóa SQL", "benchmark_score": 9.5, "user_score": 7.5},
+                {"axis": "Trực quan hóa Dữ liệu (BI)", "benchmark_score": 9.0, "user_score": 6.8},
+                {"axis": "Phân tích Thống kê", "benchmark_score": 8.5, "user_score": 7.0},
+                {"axis": "Lập trình Python & Pandas", "benchmark_score": 8.5, "user_score": 7.8},
+                {"axis": "Data Warehousing & ETL", "benchmark_score": 8.0, "user_score": 6.2},
+                {"axis": "Tư duy Kinh doanh & Báo cáo", "benchmark_score": 8.5, "user_score": 7.2}
+            ]
         }
     ]
 
