@@ -201,19 +201,22 @@ class OllamaAIService:
         request: RoadmapGenerationRequest,
         retrieved_courses: List[Dict[str, Any]]
     ) -> str:
-        """Xây dựng Prompt ngữ cảnh hóa (Context-Augmented Prompt) ép buộc xuất JSON chuẩn."""
+        """Xây dựng Prompt ngữ cảnh hóa (Context-Augmented Prompt) chia theo 3 GIAI ĐOẠN."""
         context_str = "\n".join([
-            f"- Môn {c['course_code']}: {c['course_name']} ({c['credits']} tín chỉ, Kỳ {c['semester']}). "
+            f"- Môn {c['course_code']}: {c['course_name']} ({c['credits']} tín chỉ). "
             f"Tiên quyết: {c.get('prerequisites', 'Không')}"
             for c in retrieved_courses
         ])
 
         prompt = f"""Bạn là Cố vấn Học tập & Kỹ sư Trưởng AI của hệ thống MajorMatch.
-Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng học kỳ cho sinh viên.
+Hãy sinh một lộ trình phát triển năng lực cá nhân hóa chi tiết theo 3 GIAI ĐOẠN (Phases) cho sinh viên.
+LƯU Ý QUAN TRỌNG: TUYỆT ĐỐI KHÔNG chia theo học kỳ, KHÔNG dùng từ "học kỳ" hoặc "kỳ". Hãy chia theo các GIAI ĐOẠN PHÁT TRIỂN NĂNG LỰC:
+- Giai đoạn 1: Bồi đắp Nền tảng Kỹ thuật Chuyên sâu
+- Giai đoạn 2: Nâng cao & Ứng dụng Thực chiến
+- Giai đoạn 3: Tối ưu Hệ thống & Sẵn sàng Nghề nghiệp
 
 [THÔNG TIN SINH VIÊN]
 - Chuyên ngành mục tiêu: {request.target_major_id}
-- Học kỳ hiện tại: Kỳ {request.current_semester}
 - Môn đã hoàn thành: {', '.join(request.completed_course_codes) if request.completed_course_codes else 'Chưa có'}
 - Kỹ năng còn khuyết thiếu: {', '.join(request.missing_skills)}
 
@@ -223,8 +226,8 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
 [YÊU CẦU BẮT BUỘC]
 1. Trả về DUY NHẤT một chuỗi JSON hợp lệ (không có markdown giải thích ở ngoài JSON).
 2. Kiểm tra chuỗi môn học tiên quyết: Không xếp môn nâng cao nếu môn tiên quyết chưa đạt.
-3. Sinh lộ trình cho 2 đến 3 học kỳ tiếp theo (bắt đầu từ Kỳ {request.current_semester + 1}).
-4. Đính kèm chứng chỉ chuyên ngành và đề tài đồ án thực chiến cho mỗi kỳ.
+3. Sinh đúng 3 giai đoạn (Giai đoạn 1, Giai đoạn 2, Giai đoạn 3).
+4. Đính kèm chứng chỉ chuyên ngành và đề tài đồ án thực chiến cho mỗi giai đoạn.
 
 [ĐỊNH DẠNG JSON MẪU]
 {{
@@ -232,8 +235,9 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
   "job_readiness_percentage": 72.5,
   "semesters": [
     {{
-      "semester_number": {request.current_semester + 1},
-      "semester_title": "Học kỳ {request.current_semester + 1}: Bồi đắp Nền tảng Chuyên sâu",
+      "phase_number": 1,
+      "phase_title": "Giai đoạn 1: Bồi đắp Nền tảng Kỹ thuật Chuyên sâu",
+      "target_focus": "Nắm vững thuật toán, toán học và cấu trúc dữ liệu nền tảng",
       "recommended_courses": [
         {{
           "course_code": "CS301",
@@ -248,6 +252,46 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
         "project_title": "Xây dựng Pipeline Phân loại Dữ liệu Đa nhãn",
         "description": "Ứng dụng Scikit-learn và FastAPI triển khai mô hình phân loại dữ liệu học tập sinh viên.",
         "target_skills": ["Machine Learning", "FastAPI", "Scikit-learn"]
+      }}
+    }},
+    {{
+      "phase_number": 2,
+      "phase_title": "Giai đoạn 2: Nâng cao & Ứng dụng Thực chiến",
+      "target_focus": "Phát triển các mô hình học sâu và hệ thống phân tán",
+      "recommended_courses": [
+        {{
+          "course_code": "CS401",
+          "course_name": "Học sâu & Thị giác máy tính",
+          "credits": 3,
+          "rationale": "Huấn luyện mạng nơ-ron sâu phục vụ giải quyết bài toán thị giác máy tính.",
+          "prerequisites_satisfied": true
+        }}
+      ],
+      "certifications": ["AWS Certified Machine Learning - Specialty"],
+      "practical_project": {{
+        "project_title": "Xây dựng Hệ thống Thị giác Máy tính Phân tích Ảnh Y tế",
+        "description": "Mô hình ResNet và PyTorch phát hiện bất thường từ ảnh X-quang.",
+        "target_skills": ["Deep Learning", "PyTorch", "Computer Vision"]
+      }}
+    }},
+    {{
+      "phase_number": 3,
+      "phase_title": "Giai đoạn 3: Tối ưu Hệ thống & Sẵn sàng Nghề nghiệp",
+      "target_focus": "Hoàn thiện sản phẩm lớn, tối ưu hóa suy luận và tích hợp Cloud",
+      "recommended_courses": [
+        {{
+          "course_code": "CS402",
+          "course_name": "Xử lý Ngôn ngữ Tự nhiên & LLM",
+          "credits": 3,
+          "rationale": "Làm chủ kiến trúc Transformer và xây dựng giải pháp Generative AI thực tiễn.",
+          "prerequisites_satisfied": true
+        }}
+      ],
+      "certifications": ["Google Cloud Professional Data Engineer"],
+      "practical_project": {{
+        "project_title": "Hệ thống RAG Đa phương thức Doanh nghiệp",
+        "description": "Xây dựng trợ lý ảo thông minh kết hợp ChromaDB và mô hình ngôn ngữ lớn.",
+        "target_skills": ["LLM", "RAG", "ChromaDB", "System Architecture"]
       }}
     }}
   ]
@@ -287,6 +331,12 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
                     if response.status_code == 200:
                         raw_json_str = response.json().get("response", "")
                         data = json.loads(raw_json_str)
+                        # Chuẩn hóa phase_title nếu có
+                        for item in data.get("semesters", []):
+                            if "semester_title" not in item and "phase_title" in item:
+                                item["semester_title"] = item["phase_title"]
+                            if "semester_number" not in item and "phase_number" in item:
+                                item["semester_number"] = item["phase_number"]
                         return RoadmapGenerationResponse(**data)
             except Exception:
                 # Nếu Ollama chưa khởi chạy hoặc lỗi mạng, sử dụng bộ sinh lộ trình tất định (Deterministic Fallback)
@@ -300,13 +350,12 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
         request: RoadmapGenerationRequest,
         retrieved_courses: List[Dict[str, Any]]
     ) -> RoadmapGenerationResponse:
-        """Bộ sinh lộ trình tất định dự phòng đảm bảo hệ thống luôn phản hồi ổn định."""
-        next_sem = request.current_semester + 1
+        """Bộ sinh lộ trình tất định dự phòng chuẩn 3 Giai đoạn năng lực."""
         semesters: List[SemesterMilestone] = []
 
-        rec_courses: List[RecommendedCourse] = []
+        rec_courses_1: List[RecommendedCourse] = []
         for c in retrieved_courses[:2]:
-            rec_courses.append(
+            rec_courses_1.append(
                 RecommendedCourse(
                     course_code=c["course_code"],
                     course_name=c["course_name"],
@@ -317,24 +366,84 @@ Hãy sinh một lộ trình học tập cá nhân hóa chi tiết theo từng h�
                 )
             )
 
+        # Giai đoạn 1
         semesters.append(
             SemesterMilestone(
-                semester_number=next_sem,
-                semester_title=f"Học kỳ {next_sem}: Bồi đắp Kiến thức Chuyên môn Cốt lõi",
+                phase_number=1,
+                phase_title="Giai đoạn 1: Bồi đắp Nền tảng Kỹ thuật Chuyên sâu",
+                semester_number=1,
+                semester_title="Giai đoạn 1: Bồi đắp Nền tảng Kỹ thuật Chuyên sâu",
+                target_focus="Nắm vững cấu trúc giải thuật, xác suất thống kê và nền tảng cốt lõi",
                 milestone_skills=request.missing_skills[:4] if request.missing_skills else ["Core Algorithms", "System Architecture"],
-                recommended_courses=rec_courses,
-                certifications=["AWS Certified Cloud Practitioner", "Coursera Deep Learning"],
+                recommended_courses=rec_courses_1,
+                certifications=["Coursera Deep Learning Specialization", "AWS Certified Cloud Practitioner"],
                 practical_project=PracticalProject(
                     project_title=f"Dự án Nền tảng Ứng dụng {request.target_major_id}",
-                    description="Xây dựng sản phẩm hoàn chỉnh ứng dụng các môn học trong kỳ để đưa vào Portfolio CV cá nhân.",
+                    description="Xây dựng sản phẩm hoàn chỉnh ứng dụng các môn học trong giai đoạn để đưa vào Portfolio cá nhân.",
                     target_skills=request.missing_skills[:3] if request.missing_skills else ["Problem Solving"]
+                )
+            )
+        )
+
+        # Giai đoạn 2
+        semesters.append(
+            SemesterMilestone(
+                phase_number=2,
+                phase_title="Giai đoạn 2: Nâng cao & Ứng dụng Thực chiến",
+                semester_number=2,
+                semester_title="Giai đoạn 2: Nâng cao & Ứng dụng Thực chiến",
+                target_focus="Thiết kế kiến trúc hệ thống và triển khai mô hình học sâu vào thực tế",
+                milestone_skills=["Deep Learning", "System Design", "Microservices"],
+                recommended_courses=[
+                    RecommendedCourse(
+                        course_code="CS401",
+                        course_name="Học sâu & Thị giác máy tính",
+                        credits=3,
+                        rationale="Áp dụng PyTorch huấn luyện mô hình tích chập xử lý dữ liệu phức tạp.",
+                        target_skills=["Deep Learning", "PyTorch"],
+                        prerequisites_satisfied=True
+                    )
+                ],
+                certifications=["TensorFlow Developer Certificate"],
+                practical_project=PracticalProject(
+                    project_title="Hệ thống Nhận dạng & Phân tích Đa nhãn",
+                    description="Triển khai dịch vụ phân loại dữ liệu thời gian thực tích hợp REST API.",
+                    target_skills=["PyTorch", "FastAPI", "Docker"]
+                )
+            )
+        )
+
+        # Giai đoạn 3
+        semesters.append(
+            SemesterMilestone(
+                phase_number=3,
+                phase_title="Giai đoạn 3: Tối ưu Hệ thống & Sẵn sàng Nghề nghiệp",
+                semester_number=3,
+                semester_title="Giai đoạn 3: Tối ưu Hệ thống & Sẵn sàng Nghề nghiệp",
+                target_focus="Hoàn thiện Đồ án Capstone, làm chủ kiến trúc Cloud và chuẩn bị phỏng vấn",
+                milestone_skills=["RAG", "System Optimization", "Cloud Computing"],
+                recommended_courses=[
+                    RecommendedCourse(
+                        course_code="CS402",
+                        course_name="Xử lý Ngôn ngữ Tự nhiên & LLM",
+                        credits=3,
+                        rationale="Nghiên cứu kiến trúc Transformer và xây dựng trợ lý AI thông minh.",
+                        target_skills=["NLP", "Transformers", "RAG"],
+                        prerequisites_satisfied=True
+                    )
+                ],
+                certifications=["Google Cloud Professional Data Engineer"],
+                practical_project=PracticalProject(
+                    project_title="Đồ án Capstone: Trợ lý AI Phân tích Doanh nghiệp",
+                    description="Xây dựng giải pháp RAG tích hợp mô hình ngôn ngữ lớn và Vector Database chuẩn Production.",
+                    target_skills=["RAG", "ChromaDB", "LLM", "Cloud Deploy"]
                 )
             )
         )
 
         return RoadmapGenerationResponse(
             target_major=request.target_major_id,
-            job_readiness_percentage=68.5,
+            job_readiness_percentage=72.5,
             semesters=semesters
         )
 

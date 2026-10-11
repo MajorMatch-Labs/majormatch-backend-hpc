@@ -109,10 +109,11 @@ class CalculateMatchResponse(BaseModel):
 class RoadmapGenerationRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
+    student_id: Optional[str] = Field("SV-2025001", description="Mã số sinh viên định danh hồ sơ")
     target_major_id: str = Field(..., description="Mã chuyên ngành mục tiêu", example="CS_DATA_AI")
     missing_skills: List[str] = Field(default_factory=list, description="Danh sách kỹ năng cần bù đắp")
     completed_course_codes: List[str] = Field(default_factory=list, description="Mã các môn đã hoàn thành")
-    current_semester: int = Field(..., ge=1, le=10, description="Học kỳ hiện tại của sinh viên", example=4)
+    current_semester: Optional[int] = Field(4, description="Học kỳ hiện tại của sinh viên")
     cumulative_gpa: Optional[float] = Field(None, description="Điểm trung bình tích lũy hiện tại")
 
 
@@ -135,23 +136,43 @@ class PracticalProject(BaseModel):
     target_skills: List[str] = Field(default_factory=list, description="Kỹ năng rèn luyện được qua đồ án")
 
 
-class SemesterMilestone(BaseModel):
+class PhaseMilestone(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    semester_number: int = Field(..., description="Số thứ tự học kỳ")
-    semester_title: str = Field(..., description="Tiêu đề học kỳ")
-    milestone_skills: List[str] = Field(default_factory=list, description="Kỹ năng chuẩn đầu ra của học kỳ")
+    phase_number: int = Field(1, description="Số thứ tự giai đoạn")
+    phase_title: str = Field(..., description="Tiêu đề giai đoạn học tập")
+    semester_number: Optional[int] = None
+    semester_title: Optional[str] = None
+    target_focus: Optional[str] = None
+    milestone_skills: List[str] = Field(default_factory=list, description="Kỹ năng chuẩn đầu ra của giai đoạn")
     recommended_courses: List[RecommendedCourse] = Field(default_factory=list)
     certifications: List[str] = Field(default_factory=list, description="Chứng chỉ quốc tế đề xuất")
     practical_project: Optional[PracticalProject] = None
 
 
+# Alias tương thích ngược
+SemesterMilestone = PhaseMilestone
+
+
 class RoadmapGenerationResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
+    student_id: Optional[str] = Field(None, description="Mã số sinh viên sở hữu lộ trình")
     target_major: str = Field(..., description="Tên chuyên ngành mục tiêu")
+    target_major_id: Optional[str] = None
     job_readiness_percentage: float = Field(..., ge=0.0, le=100.0, description="Tỷ lệ sẵn sàng nghề nghiệp")
-    semesters: List[SemesterMilestone] = Field(default_factory=list)
+    readiness_score: Optional[float] = None
+    semesters: List[PhaseMilestone] = Field(default_factory=list)
+    phases: Optional[List[PhaseMilestone]] = None
+    completed_items: Optional[Dict[str, bool]] = Field(default_factory=dict)
+
+
+class UpdateProgressRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    student_id: Optional[str] = Field("SV-2025001", description="Mã số sinh viên")
+    completed_items: Dict[str, bool] = Field(default_factory=dict, description="Trạng thái checkbox các môn/đồ án")
+    readiness_score: Optional[float] = Field(None, ge=0.0, le=100.0, description="Điểm Job Readiness mới")
 
 
 # =============================================================================

@@ -22,6 +22,7 @@ from schemas import (
     CalculateMatchResponse,
     RoadmapGenerationRequest,
     RoadmapGenerationResponse,
+    UpdateProgressRequest,
     ChatStreamRequest,
     HealthCheckResponse,
     ProblemDetails,
@@ -31,6 +32,10 @@ from schemas import (
 from parser import parse_transcript_document
 from ml_engine import process_skill_assessment
 from rag_service import OllamaAIService, chroma_service, OLLAMA_BASE_URL, OLLAMA_MODEL
+from database import init_db, save_roadmap, get_roadmap, update_roadmap_progress, save_assessment, get_assessment
+
+# Khởi tạo CSDL SQLite bền vững
+init_db()
 
 # Khởi tạo ứng dụng FastAPI
 app = FastAPI(
@@ -140,23 +145,71 @@ async def calculate_match(request_body: CalculateMatchRequest):
 
 
 # =============================================================================
-# ENDPOINT 3: RAG & SINH LỘ TRÌNH HỌC TẬP CÁ NHÂN HÓA
+# ENDPOINT 3: RAG, SINH LỘ TRÌNH THEO GIAI ĐOẠN & LƯU CSDL BỀN VỮNG
 # =============================================================================
 @app.post(
     "/api/v1/roadmap/generate",
     response_model=RoadmapGenerationResponse,
-    summary="RAG truy xuất ChromaDB và Ollama Qwen 2.5 sinh lộ trình JSON",
+    summary="RAG truy xuất ChromaDB và Ollama Qwen 2.5 sinh lộ trình 3 giai đoạn & lưu SQLite",
     tags=["Roadmap"]
 )
 async def generate_roadmap(request_body: RoadmapGenerationRequest):
     try:
         response = await OllamaAIService.generate_roadmap_json(request_body)
+        student_id = request_body.student_id or "SV-2025001"
+        response.student_id = student_id
+        response.target_major_id = request_body.target_major_id
+
+        # Lưu vĩnh viễn lộ trình vào CSDL SQLite
+        save_roadmap(
+            student_id=student_id,
+            target_major_id=request_body.target_major_id,
+            target_major_name=response.target_major,
+            job_readiness=response.job_readiness_percentage,
+            phases=[s.model_dump() for s in response.semesters],
+            completed_items={}
+        )
+
         return response
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi sinh lộ trình học tập: {str(e)}"
         )
+
+
+@app.get(
+    "/api/v1/roadmap/{student_id}",
+    summary="Truy vấn lộ trình học tập cá nhân hóa đã lưu trong CSDL của sinh viên",
+    tags=["Roadmap"]
+)
+async def get_saved_roadmap_endpoint(student_id: str):
+    record = get_roadmap(student_id)
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Chưa có lộ trình học tập nào được lưu cho sinh viên {student_id}."
+        )
+    return record
+
+
+@app.post(
+    "/api/v1/roadmap/{student_id}/progress",
+    summary="Cập nhật tiến độ hoàn thành các checkbox môn học/đồ án và điểm sẵn sàng vào CSDL",
+    tags=["Roadmap"]
+)
+async def update_roadmap_progress_endpoint(student_id: str, request_body: UpdateProgressRequest):
+    updated = update_roadmap_progress(
+        student_id=student_id,
+        completed_items=request_body.completed_items,
+        readiness_score=request_body.readiness_score
+    )
+    return {
+        "status": "success",
+        "student_id": student_id,
+        "updated": updated,
+        "readiness_score": request_body.readiness_score
+    }
 
 
 # =============================================================================
