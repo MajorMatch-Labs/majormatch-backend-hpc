@@ -134,9 +134,52 @@ async def health_check():
     }
 
 
+@app.post("/api/v1/assessment/calculate-match")
+async def calculate_match_proxy(request: Request):
+    """Chuyển tiếp tác vụ ML tới HPC Node & lưu bản sao vào SQLite EC2."""
+    body_bytes = await request.body()
+    try:
+        async with httpx.AsyncClient(timeout=35.0) as client:
+            resp = await client.post(
+                f"{HPC_BASE_URL}/api/v1/assessment/calculate-match",
+                content=body_bytes,
+                headers={"Content-Type": "application/json"}
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                # Tự động lưu kết quả vào CSDL SQLite EC2
+                try:
+                    req_json = json.loads(body_bytes.decode()) if body_bytes else {}
+                    student_id = req_json.get("student_id", "SV-2025001")
+                    target_career = ",".join(req_json.get("target_career_tags", ["devops_cloud"]))
+                    await save_assessment_endpoint(student_id, data)
+                except Exception:
+                    pass
+                return data
+            else:
+                raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    except httpx.ConnectError:
+        # Nếu HPC Node offline, phục vụ kết quả đã lưu từ CSDL SQLite EC2
+        req_json = json.loads(body_bytes.decode()) if body_bytes else {}
+        student_id = req_json.get("student_id", "SV-2025001")
+        conn = get_db()
+        row = conn.execute("SELECT assessment_data FROM assessments WHERE student_id = ?", (student_id,))
+        conn.close()
+        if row:
+            return json.loads(row["assessment_data"])
+        raise HTTPException(
+            status_code=503,
+            detail="Máy chủ tính toán AI HPC đang ngoại tuyến và chưa có bản ghi nào trên Cloud."
+        )
+
+
 @app.get("/api/v1/assessment/{student_id}")
+@app.get("/api/v1/student/{student_id}/assessment")
 async def get_assessment_endpoint(student_id: str):
     """Lấy kết quả đánh giá kỹ năng từ CSDL SQLite trên AWS EC2."""
+    if student_id == "calculate-match":
+        raise HTTPException(status_code=400, detail="Vui lòng gọi POST /api/v1/assessment/calculate-match")
+
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT assessment_data FROM assessments WHERE student_id = ?", (student_id,))
@@ -156,8 +199,12 @@ async def get_assessment_endpoint(student_id: str):
 
 
 @app.post("/api/v1/assessment/{student_id}")
+@app.post("/api/v1/student/{student_id}/assessment")
 async def save_assessment_endpoint(student_id: str, request_body: Dict[str, Any]):
     """Lưu hoặc cập nhật kết quả đánh giá kỹ năng vào CSDL SQLite trên AWS EC2."""
+    if student_id == "calculate-match":
+        raise HTTPException(status_code=400, detail="Vui lòng gọi POST /api/v1/assessment/calculate-match")
+
     target_career = str(request_body.get("target_career", "devops_cloud"))
     now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     data_str = json.dumps(request_body, ensure_ascii=False)
@@ -426,43 +473,6 @@ async def generate_roadmap_proxy(request: Request):
         )
 
 
-@app.post("/api/v1/assessment/calculate-match")
-async def calculate_match_proxy(request: Request):
-    """Chuyển tiếp tác vụ ML tới HPC Node & lưu bản sao vào SQLite EC2."""
-    body_bytes = await request.body()
-    try:
-        async with httpx.AsyncClient(timeout=25.0) as client:
-            resp = await client.post(
-                f"{HPC_BASE_URL}/api/v1/assessment/calculate-match",
-                content=body_bytes,
-                headers={"Content-Type": "application/json"}
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                # Tự động lưu kết quả vào CSDL SQLite EC2
-                try:
-                    req_json = json.loads(body_bytes.decode()) if body_bytes else {}
-                    student_id = req_json.get("student_id", "SV-2025001")
-                    target_career = ",".join(req_json.get("target_career_tags", ["devops_cloud"]))
-                    await save_assessment_endpoint(student_id, data)
-                except Exception:
-                    pass
-                return data
-            else:
-                raise HTTPException(status_code=resp.status_code, detail=resp.text)
-    except httpx.ConnectError:
-        # Nếu HPC Node offline, phục vụ kết quả đã lưu từ CSDL SQLite EC2
-        req_json = json.loads(body_bytes.decode()) if body_bytes else {}
-        student_id = req_json.get("student_id", "SV-2025001")
-        conn = get_db()
-        row = conn.execute("SELECT assessment_data FROM assessments WHERE student_id = ?", (student_id,))
-        conn.close()
-        if row:
-            return json.loads(row["assessment_data"])
-        raise HTTPException(
-            status_code=503,
-            detail="Máy chủ tính toán AI HPC đang ngoại tuyến và chưa có bản ghi nào trên Cloud."
-        )
 
 
 @app.post("/api/v1/profile/upload-transcript")
