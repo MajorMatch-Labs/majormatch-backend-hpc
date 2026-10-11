@@ -774,7 +774,7 @@ def compute_skill_assessment_locally(body_data: Dict[str, Any]) -> Dict[str, Any
 
 
 def generate_roadmap_locally(req_data: Dict[str, Any]) -> Dict[str, Any]:
-    """Sinh cây lộ trình 3 giai đoạn cá nhân hóa dựa trên kỹ năng còn thiếu trên EC2."""
+    """Sinh cây lộ trình 3 giai đoạn cá nhân hóa chuẩn DTO PhaseMilestone trên EC2."""
     target_major_id = req_data.get("target_major_id", "DEVOPS_CLOUD")
     student_id = req_data.get("student_id", "SV-2025001")
 
@@ -783,9 +783,9 @@ def generate_roadmap_locally(req_data: Dict[str, Any]) -> Dict[str, Any]:
     a_row = conn.execute("SELECT assessment_data FROM assessments WHERE student_id = ?", (student_id,)).fetchone()
     conn.close()
 
-    missing_skills = ["Kubernetes", "AWS", "CI/CD", "Docker", "Monitoring"]
+    missing_skills = ["Kubernetes", "AWS", "CI/CD", "Docker", "Monitoring", "System Design"]
     target_major_name = "Kỹ thuật Đám mây & Vận hành Hệ thống"
-    readiness_score = 64.5
+    readiness_score = 61.0
 
     if a_row:
         try:
@@ -793,85 +793,312 @@ def generate_roadmap_locally(req_data: Dict[str, Any]) -> Dict[str, Any]:
             for m in adata.get("top_matches", []):
                 if m.get("major_id") == target_major_id or not target_major_id:
                     target_major_name = m.get("major_name", target_major_name)
+                    target_major_id = m.get("major_id", target_major_id)
                     readiness_score = float(m.get("match_percentage", readiness_score))
                     missing_skills = m.get("skill_gap", {}).get("missing_skills", missing_skills)
                     break
         except Exception:
             pass
 
+    # Bộ siêu dữ liệu môn học, đồ án và chứng chỉ theo từng ngành
+    domain_templates = {
+        "DEVOPS_CLOUD": {
+            "name": "Kỹ thuật Đám mây & Vận hành Hệ thống",
+            "p1_focus": "Làm chủ Container Docker, Tự động hóa CI/CD & Quản trị Linux Server",
+            "p1_courses": [
+                {
+                    "course_code": "DO301",
+                    "course_name": "Công nghệ Ảo hóa & Containerization (Docker)",
+                    "credits": 3,
+                    "rationale": "Bồi đắp kỹ năng đóng gói ứng dụng độc lập môi trường và cấu hình Multi-stage Dockerfile.",
+                    "target_skills": ["Docker", "Linux", "Containerization"]
+                },
+                {
+                    "course_code": "DO302",
+                    "course_name": "Tích hợp & Triển khai Liên tục (CI/CD Pipelines)",
+                    "credits": 3,
+                    "rationale": "Tự động hóa kiểm thử và release mã nguồn qua GitHub Actions và GitLab CI.",
+                    "target_skills": ["CI/CD", "Git", "DevOps"]
+                }
+            ],
+            "p1_project": {
+                "project_title": "Hệ thống Tự động hóa Build & Deploy Microservices với GitHub Actions",
+                "description": "Thiết lập pipeline tự động kiểm tra code style, chạy unit tests, build Docker images và đẩy lên registry.",
+                "target_skills": ["Docker", "CI/CD", "Linux"]
+            },
+            "p1_certs": ["Linux Foundation Certified System Administrator (LFCS)"],
+            
+            "p2_focus": "Điều phối Cụm Container Kubernetes & Kiến trúc Đám mây AWS",
+            "p2_courses": [
+                {
+                    "course_code": "DO401",
+                    "course_name": "Điều phối Hệ thống Phân tán với Kubernetes",
+                    "credits": 3,
+                    "rationale": "Làm chủ Pod, Deployment, Service, Ingress Nginx và HPA tự động mở rộng theo tải.",
+                    "target_skills": ["Kubernetes", "Distributed Systems", "Cloud Computing"]
+                },
+                {
+                    "course_code": "DO402",
+                    "course_name": "Kiến trúc Điện toán Đám mây AWS & Terraform",
+                    "credits": 3,
+                    "rationale": "Khởi tạo hạ tầng dưới dạng mã nguồn (IaC) trên AWS VPC, EC2, S3 và RDS.",
+                    "target_skills": ["AWS", "System Design", "Cloud Computing"]
+                }
+            ],
+            "p2_project": {
+                "project_title": "Triển khai Cụm Kubernetes Đa vùng Chịu tải Cao trên AWS",
+                "description": "Điều phối cụm microservices với ArgoCD GitOps, tích hợp Prometheus và Grafana giám sát thời gian thực.",
+                "target_skills": ["Kubernetes", "AWS", "Monitoring"]
+            },
+            "p2_certs": ["Docker Certified Associate (DCA)", "Certified Kubernetes Administrator (CKA)"],
+
+            "p3_focus": "Kỹ thuật Độ tin cậy Hệ thống (SRE) & Tối ưu Portfolio DevOps",
+            "p3_courses": [
+                {
+                    "course_code": "DO499",
+                    "course_name": "Đồ án Tốt nghiệp Vận hành & Bảo mật Hạ tầng Đám mây",
+                    "credits": 6,
+                    "rationale": "Tổng hợp toàn bộ kỹ năng thiết kế hệ thống có tính sẵn sàng cao (High Availability).",
+                    "target_skills": ["System Design", "Cloud Computing", "Monitoring"]
+                }
+            ],
+            "p3_project": {
+                "project_title": "Nền tảng Giám sát Toàn diện SRE & Cảnh báo Sự cố Tự động",
+                "description": "Xây dựng dashboard tổng hợp SLA/SLO, truy vết phân tán Jaeger và cảnh báo sự cố qua Telegram/Slack.",
+                "target_skills": ["Monitoring", "System Design", "DevOps"]
+            },
+            "p3_certs": ["AWS Certified Solutions Architect - Associate"]
+        },
+        "AI_DATA_SCIENCE": {
+            "name": "Kỹ sư Trí tuệ Nhân tạo & Khoa học Dữ liệu",
+            "p1_focus": "Học máy Thống kê, Xử lý Dữ liệu Lớn với SQL & Pandas",
+            "p1_courses": [
+                {
+                    "course_code": "CS301",
+                    "course_name": "Học máy Nâng cao & Phân tích Dữ liệu Lớn",
+                    "credits": 3,
+                    "rationale": "Nắm vững các thuật toán hồi quy, phân loại và kỹ thuật đặc trưng Scikit-learn.",
+                    "target_skills": ["Machine Learning", "Data Science", "Python"]
+                },
+                {
+                    "course_code": "CS302",
+                    "course_name": "Cơ sở Dữ liệu Nâng cao & Kỹ thuật Dữ liệu (ETL)",
+                    "credits": 3,
+                    "rationale": "Bồi đắp kỹ năng thiết kế Data Pipeline và tối ưu hóa truy vấn SQL phân tán.",
+                    "target_skills": ["SQL", "Data Modeling", "ETL Pipelines"]
+                }
+            ],
+            "p1_project": {
+                "project_title": "Pipeline Dự báo Xu hướng & Phân khúc Khách hàng Đa kênh",
+                "description": "Thu thập, làm sạch dữ liệu lớn và huấn luyện mô hình phân loại dự đoán tỷ lệ khách hàng rời bỏ.",
+                "target_skills": ["Machine Learning", "Data Science", "Python"]
+            },
+            "p1_certs": ["DeepLearning.AI Machine Learning Specialization"],
+
+            "p2_focus": "Học sâu (Deep Learning), Thị giác Máy tính & Xử lý Ngôn ngữ Tự nhiên (NLP)",
+            "p2_courses": [
+                {
+                    "course_code": "CS402",
+                    "course_name": "Mạng Nơ-ron Sâu & Ứng dụng Thị giác Máy tính",
+                    "credits": 3,
+                    "rationale": "Làm chủ kiến trúc CNN, ResNet và Vision Transformer sử dụng PyTorch.",
+                    "target_skills": ["Deep Learning", "PyTorch", "Computer Vision"]
+                },
+                {
+                    "course_code": "CS415",
+                    "course_name": "Xử lý Ngôn ngữ Tự nhiên & Mô hình Ngôn ngữ Lớn (LLM)",
+                    "credits": 3,
+                    "rationale": "Xây dựng ứng dụng hỏi đáp tài liệu RAG kết hợp Vector DB ChromaDB và LLM.",
+                    "target_skills": ["NLP", "Large Language Models", "Deep Learning"]
+                }
+            ],
+            "p2_project": {
+                "project_title": "Hệ thống RAG Thông minh Tra cứu Văn bản Chuyên ngành với Qwen 2.5",
+                "description": "Tích hợp trích xuất vector embedding, tìm kiếm ngữ nghĩa Cosine và sinh câu trả lời có trích dẫn.",
+                "target_skills": ["PyTorch", "NLP", "Large Language Models"]
+            },
+            "p2_certs": ["AWS Certified Machine Learning - Specialty"],
+
+            "p3_focus": "Triển khai MLOps & Hoàn thiện Đồ án Capstone Tốt nghiệp",
+            "p3_courses": [
+                {
+                    "course_code": "CS499",
+                    "course_name": "Khóa luận Tốt nghiệp Khoa học Dữ liệu & AI",
+                    "credits": 6,
+                    "rationale": "Hiện thực hóa giải pháp AI hoàn chỉnh từ huấn luyện đến triển khai môi trường thực tế.",
+                    "target_skills": ["Machine Learning", "System Design", "Research"]
+                }
+            ],
+            "p3_project": {
+                "project_title": "Nền tảng MLOps Tự động Huấn luyện & Phục vụ Mô hình Real-time",
+                "description": "Đóng gói mô hình bằng FastAPI, giám sát độ trễ suy luận và tự động tái huấn luyện khi dữ liệu trôi dạt (Data Drift).",
+                "target_skills": ["Deep Learning", "Python", "System Design"]
+            },
+            "p3_certs": ["Google Cloud Professional Data Engineer"]
+        },
+        "FULLSTACK_WEB": {
+            "name": "Kỹ sư Phát triển Web Toàn diện (Fullstack Web)",
+            "p1_focus": "Lập trình TypeScript, Giao diện Next.js Web 2.0 & REST API Chuẩn",
+            "p1_courses": [
+                {
+                    "course_code": "SE201",
+                    "course_name": "Phát triển Ứng dụng Web Hiện đại với Next.js & React",
+                    "credits": 3,
+                    "rationale": "Xây dựng giao diện Web 2.0 tốc độ cao với Server Components và TailwindCSS.",
+                    "target_skills": ["JavaScript", "TypeScript", "React", "Next.js"]
+                },
+                {
+                    "course_code": "SE202",
+                    "course_name": "Kiến trúc Backend & Cơ sở Dữ liệu Quan hệ",
+                    "credits": 3,
+                    "rationale": "Nắm vững thiết kế REST API, xác thực JWT và tối ưu truy vấn PostgreSQL/Prisma.",
+                    "target_skills": ["Node.js", "SQL", "Database"]
+                }
+            ],
+            "p1_project": {
+                "project_title": "Nền tảng Web Thương mại Điện tử Thời gian thực Fullstack",
+                "description": "Xây dựng trọn vẹn từ giao diện Next.js, giỏ hàng, thanh toán trực tuyến đến quản trị sản phẩm.",
+                "target_skills": ["TypeScript", "Next.js", "Node.js"]
+            },
+            "p1_certs": ["Meta Front-End Developer Certificate"],
+
+            "p2_focus": "Kiến trúc Microservices, Quản lý Trạng thái & Bảo mật Ứng dụng Web",
+            "p2_courses": [
+                {
+                    "course_code": "SE301",
+                    "course_name": "Thiết kế Hệ thống Phần mềm & Microservices",
+                    "credits": 3,
+                    "rationale": "Phân rã module dịch vụ, giao tiếp Event-Driven và quản lý bộ nhớ đệm Redis.",
+                    "target_skills": ["Software Engineering", "OOP", "Git"]
+                }
+            ],
+            "p2_project": {
+                "project_title": "Hệ thống Đặt vé Thời gian thực Chịu tải Cao với WebSocket & Redis",
+                "description": "Giải quyết bài toán khóa ghế cạnh tranh, thanh toán bất đồng bộ và giảm tải CSDL với Redis Cache.",
+                "target_skills": ["Web Development", "Database", "Node.js"]
+            },
+            "p2_certs": ["AWS Certified Developer - Associate"],
+
+            "p3_focus": "Tối ưu Hiệu năng, Kiểm thử Tự động & Triển khai Production",
+            "p3_courses": [
+                {
+                    "course_code": "SE499",
+                    "course_name": "Đồ án Khóa luận Tốt nghiệp Kỹ thuật Phần mềm",
+                    "credits": 6,
+                    "rationale": "Xây dựng ứng dụng hoàn thiện theo chuẩn công nghiệp kèm tài liệu kiến trúc.",
+                    "target_skills": ["Software Engineering", "Web Development", "Git"]
+                }
+            ],
+            "p3_project": {
+                "project_title": "Nền tảng SaaS Quản lý Dự án Tích hợp AI Hỗ trợ Phân tích",
+                "description": "Tích hợp xác thực phân quyền OAuth2, thông báo đẩy, phân tích biểu đồ và trợ lý AI.",
+                "target_skills": ["React", "TypeScript", "Software Engineering"]
+            },
+            "p3_certs": ["Meta Back-End Developer Certificate"]
+        },
+        "CYBER_SECURITY": {
+            "name": "Chuyên viên An toàn Thông tin (Cybersecurity)",
+            "p1_focus": "An ninh Mạng Cơ bản, Mật mã học & Quản trị Hệ điều hành Linux",
+            "p1_courses": [
+                {
+                    "course_code": "SEC201",
+                    "course_name": "Cơ sở An toàn Thông tin & Mật mã học",
+                    "credits": 3,
+                    "rationale": "Hiểu rõ các thuật toán mã hóa đối xứng, bất đối xứng, chữ ký số và hàm băm.",
+                    "target_skills": ["Cryptography", "Cybersecurity", "Network Security"]
+                },
+                {
+                    "course_code": "SEC202",
+                    "course_name": "An ninh Mạng & Phân tích Giao thức Mạng",
+                    "credits": 3,
+                    "rationale": "Phân tích gói tin với Wireshark, cấu hình tường lửa iptables và phân vùng DMZ.",
+                    "target_skills": ["Computer Network", "Network Security", "Linux"]
+                }
+            ],
+            "p1_project": {
+                "project_title": "Hệ thống Tường lửa & Giám sát Lưu lượng Mạng Phòng thủ",
+                "description": "Thiết lập hệ thống Snort phát hiện xâm nhập trái phép và cấu hình cảnh báo tấn công từ chối dịch vụ DoS.",
+                "target_skills": ["Network Security", "Linux", "Cybersecurity"]
+            },
+            "p1_certs": ["CompTIA Security+"],
+
+            "p2_focus": "Kiểm thử Xâm nhập (Penetration Testing) & An toàn Ứng dụng Web",
+            "p2_courses": [
+                {
+                    "course_code": "SEC301",
+                    "course_name": "Kiểm thử Đánh giá Lỗ hổng Bảo mật Web",
+                    "credits": 3,
+                    "rationale": "Thực hành rà quét các lỗ hổng OWASP Top 10 (SQLi, XSS, CSRF, SSRF) trên môi trường lab.",
+                    "target_skills": ["Web Security", "Cybersecurity", "Network Security"]
+                }
+            ],
+            "p2_project": {
+                "project_title": "Báo cáo Đánh giá Lỗ hổng Toàn diện & Bản vá Bảo mật Ứng dụng Web",
+                "description": "Khai thác giả lập lỗ hổng trên ứng dụng web mẫu và viết tài liệu hướng dẫn vá lỗi theo chuẩn quốc tế.",
+                "target_skills": ["Web Security", "Cryptography", "Cybersecurity"]
+            },
+            "p2_certs": ["Certified Ethical Hacker (CEH)"],
+
+            "p3_focus": "Ứng cứu Sự cố, Điều tra Số (Digital Forensics) & Trung tâm SOC",
+            "p3_courses": [
+                {
+                    "course_code": "SEC499",
+                    "course_name": "Đồ án Tốt nghiệp An toàn An ninh Mạng",
+                    "credits": 6,
+                    "rationale": "Thiết kế kiến trúc an ninh phòng thủ chiều sâu cho hệ thống doanh nghiệp.",
+                    "target_skills": ["Network Security", "Cybersecurity", "Computer Network"]
+                }
+            ],
+            "p3_project": {
+                "project_title": "Trung tâm Điều hành An ninh Mạng SOC & Ứng phó Sự cố Tự động",
+                "description": "Triển khai SIEM Wazuh/Splunk phát hiện mã độc và xây dựng quy trình ứng cứu sự cố tự động.",
+                "target_skills": ["Cybersecurity", "Network Security", "Linux"]
+            },
+            "p3_certs": ["OffSec Certified Professional (OSCP)"]
+        }
+    }
+
+    tmpl = domain_templates.get(target_major_id, domain_templates["DEVOPS_CLOUD"])
+    target_major_name = tmpl["name"]
+
+    # Phân bổ kỹ năng thiếu vào các giai đoạn
+    p1_skills = missing_skills[:3] if missing_skills else ["Nền tảng chuyên môn", "Giải quyết vấn đề"]
+    p2_skills = missing_skills[3:6] if len(missing_skills) > 3 else missing_skills[:2]
+    p3_skills = missing_skills[6:] if len(missing_skills) > 6 else ["System Design", "Thực chiến đồ án", "Sẵn sàng ứng tuyển"]
+
     phases = [
         {
-            "phase_id": "phase-1",
-            "phase_name": "Giai đoạn 1: Nền tảng & Khắc phục khoảng cách kỹ năng",
-            "duration": "Tháng 1 - Tháng 2",
-            "description": f"Tập trung bù đắp các lỗ hổng kỹ năng cốt lõi được phát hiện từ hồ sơ: {', '.join(missing_skills[:3])}.",
-            "items": [
-                {
-                    "item_id": "p1-it1",
-                    "title": f"Làm chủ {missing_skills[0] if len(missing_skills) > 0 else 'Docker'}",
-                    "description": "Nắm vững cú pháp cơ bản, các lệnh cấu hình container và tối ưu hóa môi trường.",
-                    "estimated_hours": 20,
-                    "type": "theory_practice"
-                },
-                {
-                    "item_id": "p1-it2",
-                    "title": f"Bổ sung kiến thức {missing_skills[1] if len(missing_skills) > 1 else 'CI/CD'}",
-                    "description": "Tích hợp tự động hóa quy trình kiểm thử và triển khai liên tục qua GitHub Actions.",
-                    "estimated_hours": 15,
-                    "type": "practice"
-                },
-                {
-                    "item_id": "p1-it3",
-                    "title": "Kiến trúc hệ thống và Mạng cơ bản",
-                    "description": "Ôn tập mô hình mạng TCP/IP, DNS, SSL/TLS và cấu hình Nginx Reverse Proxy.",
-                    "estimated_hours": 10,
-                    "type": "theory"
-                }
-            ]
+            "phase_number": 1,
+            "phase_title": "Giai đoạn 1: Nền tảng & Khắc phục khoảng cách kỹ năng",
+            "semester_number": 1,
+            "semester_name": "Giai đoạn 1: Nền tảng & Khắc phục khoảng cách kỹ năng",
+            "target_focus": tmpl["p1_focus"],
+            "milestone_skills": p1_skills,
+            "recommended_courses": tmpl["p1_courses"],
+            "practical_projects": [tmpl["p1_project"]],
+            "certifications": tmpl["p1_certs"]
         },
         {
-            "phase_id": "phase-2",
-            "phase_name": "Giai đoạn 2: Nâng cao Chuyên môn & Đồ án Thực chiến",
-            "duration": "Tháng 3 - Tháng 4",
-            "description": f"Xây dựng dự án hoàn chỉnh mô phỏng môi trường sản xuất của {target_major_name}.",
-            "items": [
-                {
-                    "item_id": "p2-it1",
-                    "title": f"Thực chiến {missing_skills[2] if len(missing_skills) > 2 else 'Kubernetes & Cloud'}",
-                    "description": "Triển khai cụm microservices đa vùng với khả năng tự phục hồi và mở rộng linh hoạt.",
-                    "estimated_hours": 30,
-                    "type": "project"
-                },
-                {
-                    "item_id": "p2-it2",
-                    "title": "Giám sát & Quản lý Log tập trung",
-                    "description": "Thiết lập Prometheus, Grafana và cấu hình hệ thống cảnh báo tức thì.",
-                    "estimated_hours": 20,
-                    "type": "practice"
-                }
-            ]
+            "phase_number": 2,
+            "phase_title": "Giai đoạn 2: Nâng cao Chuyên môn & Đồ án Thực chiến",
+            "semester_number": 2,
+            "semester_name": "Giai đoạn 2: Nâng cao Chuyên môn & Đồ án Thực chiến",
+            "target_focus": tmpl["p2_focus"],
+            "milestone_skills": p2_skills,
+            "recommended_courses": tmpl["p2_courses"],
+            "practical_projects": [tmpl["p2_project"]],
+            "certifications": tmpl["p2_certs"]
         },
         {
-            "phase_id": "phase-3",
-            "phase_name": "Giai đoạn 3: Tối ưu Hồ sơ & Sẵn sàng Ứng tuyển",
-            "duration": "Tháng 5",
-            "description": "Chuẩn bị portfolio GitHub, phỏng vấn kỹ thuật và chứng chỉ chuyên ngành.",
-            "items": [
-                {
-                    "item_id": "p3-it1",
-                    "title": "Hoàn thiện Đồ án Capstone trên GitHub",
-                    "description": "Đóng gói mã nguồn sạch, viết README chuẩn quốc tế kèm sơ đồ kiến trúc hệ thống.",
-                    "estimated_hours": 25,
-                    "type": "capstone"
-                },
-                {
-                    "item_id": "p3-it2",
-                    "title": "Luyện tập Phỏng vấn Kỹ thuật & Tối ưu CV",
-                    "description": "Mô phỏng phỏng vấn trực tiếp với AI Advisor để tự tin ứng tuyển vị trí thực tập / fresher.",
-                    "estimated_hours": 15,
-                    "type": "career"
-                }
-            ]
+            "phase_number": 3,
+            "phase_title": "Giai đoạn 3: Tối ưu Hồ sơ & Sẵn sàng Ứng tuyển",
+            "semester_number": 3,
+            "semester_name": "Giai đoạn 3: Tối ưu Hồ sơ & Sẵn sàng Ứng tuyển",
+            "target_focus": tmpl["p3_focus"],
+            "milestone_skills": p3_skills,
+            "recommended_courses": tmpl["p3_courses"],
+            "practical_projects": [tmpl["p3_project"]],
+            "certifications": tmpl["p3_certs"]
         }
     ]
 
@@ -881,6 +1108,8 @@ def generate_roadmap_locally(req_data: Dict[str, Any]) -> Dict[str, Any]:
         "target_major": target_major_name,
         "target_major_id": target_major_id,
         "job_readiness_percentage": readiness_score,
+        "readiness_score": readiness_score,
+        "total_milestones": len(phases),
         "phases": phases,
         "semesters": phases
     }
