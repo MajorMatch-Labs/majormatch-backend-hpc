@@ -355,10 +355,10 @@ async def chat_stream_proxy(request: Request):
     target_major = req_json.get("target_major", "Kỹ thuật Đám mây & Vận hành Hệ thống")
 
     async def stream_generator():
-        # Thử kết nối tới HPC GPU Node qua Joy 3 trong 3.5 giây
+        # Kiểm tra nhanh kết nối tới HPC GPU Node (Fast Circuit Breaker: 0.8s)
         connected_to_hpc = False
         try:
-            timeout_cfg = httpx.Timeout(120.0, connect=3.5)
+            timeout_cfg = httpx.Timeout(120.0, connect=0.8)
             async with httpx.AsyncClient(timeout=timeout_cfg) as client:
                 async with client.stream(
                     "POST",
@@ -375,7 +375,7 @@ async def chat_stream_proxy(request: Request):
             connected_to_hpc = False
 
         if not connected_to_hpc:
-            # Cloud AI Advisor Fallback: Trả lời tự động dựa trên hồ sơ sinh viên
+            # Cloud Database-Only Fallback: Phục vụ trực tiếp từ CSDL trên AWS EC2
             conn = get_db()
             p_row = conn.execute("SELECT detected_skills, cumulative_gpa FROM user_profiles WHERE student_id = 'SV-2025001'").fetchone()
             conn.close()
@@ -383,22 +383,39 @@ async def chat_stream_proxy(request: Request):
             skills = json.loads(p_row["detected_skills"]) if p_row and p_row["detected_skills"] else ["Linux", "Git", "Python"]
 
             fallback_text = (
-                f"Xin chào! Cố vấn AI MajorMatch đã nhận được câu hỏi: \"{user_query}\".\n\n"
-                f"📌 **Định hướng chuyên ngành mục tiêu**: {target_major} (GPA tích lũy: {gpa}/4.0).\n\n"
-                f"💡 **Lời khuyên bám sát năng lực thực tế**:\n"
-                f"1. **Tập trung vào kỹ năng trọng tâm**: Với nền tảng hiện tại ({', '.join(skills[:3])}), bạn nên dành 60% thời gian thực hành đồ án cá nhân và 40% cho lý thuyết trên lớp.\n"
-                f"2. **Phương pháp cân bằng**: Chia nhỏ các mục tiêu tuần, sử dụng kỹ thuật Pomodoro và đẩy toàn bộ sản phẩm thực hành lên GitHub để làm đẹp hồ sơ Portfolio ứng tuyển.\n"
-                f"3. **Lộ trình đề xuất**: Hãy theo sát 3 giai đoạn đã được AI thiết lập tại mục \"Lộ trình Tương tác\" để từng bước bù đắp các khoảng cách kỹ năng còn thiếu.\n\n"
-                f"Chúc bạn học tập hiệu quả và sớm đạt chuẩn kỹ sư {target_major}!"
+                f"⚡ **[Chế độ Đám mây Ngoại tuyến - Cloud Database Mode]**\n\n"
+                f"Cố vấn AI MajorMatch đã tiếp nhận câu hỏi: *\"{user_query}\"*.\n"
+                f"*(Nút tính toán Private GPU Node hiện đang tắt hoặc đường truyền mạng gián đoạn. Toàn bộ dữ liệu được truy xuất trực tiếp từ CSDL AWS EC2)*\n\n"
+                f"📊 **Dữ liệu hồ sơ trích xuất từ AWS Database**:\n"
+                f"- Định hướng chuyên ngành: **{target_major}**\n"
+                f"- Điểm GPA tích lũy: **{gpa}/4.0**\n"
+                f"- Kỹ năng đã ghi nhận: **{', '.join(skills[:5])}**\n\n"
+                f"💡 **Tư vấn học tập theo lộ trình đã lưu**:\n"
+                f"1. **Bám sát mục tiêu chuyên môn**: Hãy tiếp tục hoàn thành các môn học và chứng chỉ đã được thiết lập tại mục \"Lộ trình Tương tác\".\n"
+                f"2. **Tương tác tiến độ**: Bạn có thể tích chọn hoàn thành các môn học/đồ án, hệ thống sẽ tự động cập nhật và lưu vĩnh viễn điểm sẵn sàng nghề nghiệp vào CSDL AWS.\n"
+                f"3. **Kích hoạt GPU**: Để trò chuyện trực tiếp với mô hình Qwen 2.5 7B, bạn chỉ cần khởi động backend trên máy tính cá nhân và kết nối Joy 3."
             )
 
-            # Phân tách và stream từng cụm từ mô phỏng tốc độ sinh token thực tế
+            # Lưu câu trả lời vào CSDL SQLite trên AWS EC2
+            now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            try:
+                conn_save = get_db()
+                with conn_save:
+                    conn_save.execute(
+                        "INSERT INTO chat_history (student_id, role, content, created_at) VALUES (?, ?, ?, ?)",
+                        ("SV-2025001", "assistant", fallback_text, now_str)
+                    )
+                conn_save.close()
+            except Exception:
+                pass
+
+            # Phân tách và stream từng cụm từ mô phỏng tốc độ sinh token
             words = fallback_text.split(" ")
             for idx, word in enumerate(words):
                 token = word + (" " if idx < len(words) - 1 else "")
                 evt = json.dumps({"token": token, "done": False}, ensure_ascii=False)
                 yield f"event: message\ndata: {evt}\n\n".encode("utf-8")
-                await asyncio.sleep(0.025)
+                await asyncio.sleep(0.02)
 
             yield f"event: message\ndata: {json.dumps({'token': '', 'done': True}, ensure_ascii=False)}\n\n".encode("utf-8")
 
