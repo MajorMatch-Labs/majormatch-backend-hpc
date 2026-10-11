@@ -333,24 +333,27 @@ def process_skill_assessment(request: CalculateMatchRequest) -> CalculateMatchRe
     match_scores_raw.sort(key=lambda x: x[2], reverse=True)
 
     for rank, (m_id, m_name, score) in enumerate(match_scores_raw, start=1):
+        m_meta = MAJOR_BENCHMARKS[m_id]
+        m_radar = MLEngine.compute_radar_axes(user_vector, m_meta["axes_weights"])
+        m_skills = MLEngine.analyze_skill_breakdown(user_vector, m_meta["key_skills"])
+
         ranked_matches.append(
             MajorMatchRankItem(
                 major_id=m_id,
                 major_name=m_name,
                 match_percentage=score,
-                rank=rank
+                rank=rank,
+                radar_data=m_radar,
+                skill_gap=m_skills
             )
         )
 
-    # Lấy ngành đứng đầu (Top 1) để tính toán chi tiết biểu đồ Radar và Skill Gap
+    # Lấy ngành đứng đầu (Top 1) làm mặc định cho response cấp cao
     top_major_id = ranked_matches[0].major_id
-    top_major_meta = MAJOR_BENCHMARKS[top_major_id]
-
-    radar_data = MLEngine.compute_radar_axes(user_vector, top_major_meta["axes_weights"])
-    skill_breakdown = MLEngine.analyze_skill_breakdown(user_vector, top_major_meta["key_skills"])
+    top_major_item = ranked_matches[0]
 
     return CalculateMatchResponse(
         top_matches=ranked_matches,
-        radar_chart_data=radar_data,
-        skill_breakdown=skill_breakdown
+        radar_chart_data=top_major_item.radar_data or [],
+        skill_breakdown=top_major_item.skill_gap or SkillBreakdown()
     )

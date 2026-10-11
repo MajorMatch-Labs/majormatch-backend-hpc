@@ -69,17 +69,8 @@ class CalculateMatchRequest(BaseModel):
     courses: List[CourseInputAssessment] = Field(default_factory=list, description="Danh mục môn và điểm")
 
 
-class MajorMatchRankItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    major_id: str = Field(..., description="Mã chuyên ngành")
-    major_name: str = Field(..., description="Tên chuyên ngành đào tạo")
-    match_percentage: float = Field(..., ge=0.0, le=100.0, description="Tỷ lệ phù hợp (%)")
-    rank: int = Field(..., ge=1, description="Thứ hạng xếp loại")
-
-
 class RadarAxisItem(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     axis_name: str = Field(..., description="Tên trục năng lực")
     user_score: float = Field(..., ge=0.0, le=10.0, description="Điểm số người dùng (thang 10)")
@@ -87,11 +78,22 @@ class RadarAxisItem(BaseModel):
 
 
 class SkillBreakdown(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     mastered_skills: List[str] = Field(default_factory=list, description="Kỹ năng đã làm chủ")
     developing_skills: List[str] = Field(default_factory=list, description="Kỹ năng đang phát triển")
     missing_skills: List[str] = Field(default_factory=list, description="Kỹ năng còn thiếu cần bù đắp")
+
+
+class MajorMatchRankItem(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    major_id: str = Field(..., description="Mã chuyên ngành")
+    major_name: str = Field(..., description="Tên chuyên ngành đào tạo")
+    match_percentage: float = Field(..., ge=0.0, le=100.0, description="Tỷ lệ phù hợp (%)")
+    rank: int = Field(..., ge=1, description="Thứ hạng xếp loại")
+    radar_data: Optional[List[RadarAxisItem]] = None
+    skill_gap: Optional[SkillBreakdown] = None
 
 
 class CalculateMatchResponse(BaseModel):
