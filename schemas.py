@@ -115,6 +115,7 @@ class RoadmapGenerationRequest(BaseModel):
     completed_course_codes: List[str] = Field(default_factory=list, description="Mã các môn đã hoàn thành")
     current_semester: Optional[int] = Field(4, description="Học kỳ hiện tại của sinh viên")
     cumulative_gpa: Optional[float] = Field(None, description="Điểm trung bình tích lũy hiện tại")
+    initial_readiness_score: Optional[float] = Field(None, ge=0.0, le=100.0, description="Điểm tiềm năng ban đầu từ phân tích Skill Gap")
 
 
 class RecommendedCourse(BaseModel):
