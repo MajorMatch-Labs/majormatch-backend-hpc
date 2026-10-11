@@ -4,7 +4,7 @@ Sử dụng Scikit-learn, NumPy để vector hóa bộ kỹ năng, tính Cosine 
 xếp hạng độ phù hợp chuyên ngành và tính toán tọa độ biểu đồ Radar 6 trục.
 """
 
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Optional
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -13,7 +13,8 @@ from schemas import (
     CalculateMatchResponse,
     MajorMatchRankItem,
     RadarAxisItem,
-    SkillBreakdown
+    SkillBreakdown,
+    HollandScores
 )
 
 
@@ -214,10 +215,10 @@ class MLEngine:
     def compute_radar_axes(
         cls,
         user_vector: np.ndarray,
-        benchmark_axes: Dict[str, float]
+        benchmark_axes: Dict[str, float],
+        user_holland: Optional[HollandScores] = None
     ) -> List[RadarAxisItem]:
-        """Tính toán tọa độ 6 trục biểu đồ Radar Chart (thang điểm 0.0 - 10.0)."""
-        # Nhóm các chỉ số chiều theo từng trục
+        """Tính toán tọa độ 6 trục biểu đồ Radar Chart kết hợp năng lực môn học và điểm khảo sát RIASEC."""
         axis_mappings = {
             "Core Technical": ["Python", "C++", "Java", "OOP", "Data Structures", "Operating Systems"],
             "Domain Specialization": ["Machine Learning", "Deep Learning", "Docker", "Network Security", "Cloud Computing"],
@@ -227,21 +228,41 @@ class MLEngine:
             "Soft Skills & Professionalism": ["Problem Solving", "Clean Code", "Communication", "Agile/Scrum"]
         }
 
+        # Trọng số RIASEC ảnh hưởng trực tiếp lên từng trục năng lực (thang điểm 1-5 chuyển sang 0-10)
+        r_val = float(getattr(user_holland, "realistic", 3.0)) * 2.0 if user_holland else 6.0
+        i_val = float(getattr(user_holland, "investigative", 3.0)) * 2.0 if user_holland else 6.0
+        a_val = float(getattr(user_holland, "artistic", 3.0)) * 2.0 if user_holland else 6.0
+        s_val = float(getattr(user_holland, "social", 3.0)) * 2.0 if user_holland else 6.0
+        e_val = float(getattr(user_holland, "enterprising", 3.0)) * 2.0 if user_holland else 6.0
+        c_val = float(getattr(user_holland, "conventional", 3.0)) * 2.0 if user_holland else 6.0
+
+        holland_axis_influence = {
+            "Core Technical": r_val * 0.7 + i_val * 0.3,
+            "Domain Specialization": i_val * 0.6 + a_val * 0.4,
+            "Algorithmic Thinking": i_val * 0.8 + c_val * 0.2,
+            "System Architecture": c_val * 0.5 + i_val * 0.5,
+            "Industry Tools": r_val * 0.5 + c_val * 0.5,
+            "Soft Skills & Professionalism": s_val * 0.6 + e_val * 0.4
+        }
+
         radar_items: List[RadarAxisItem] = []
 
         for axis_name, skills in axis_mappings.items():
             bench_target = benchmark_axes.get(axis_name, 8.0)
 
-            # Lấy trung bình điểm của người dùng trên các kỹ năng thuộc trục
+            # Lấy trung bình điểm của người dùng trên các kỹ năng thuộc trục từ môn học
             scores = []
             for s in skills:
                 if s in SKILL_TO_INDEX:
                     idx = SKILL_TO_INDEX[s]
                     scores.append(user_vector[idx])
             
-            user_avg = float(np.mean(scores)) if scores else 3.5
-            # Đảm bảo điểm hiển thị không quá thấp cho người bắt đầu (tối thiểu 1.5)
-            user_display = max(1.5, min(10.0, round(user_avg, 1)))
+            course_avg = float(np.mean(scores)) if scores else 3.5
+            h_score = holland_axis_influence.get(axis_name, 6.0)
+
+            # Hòa trộn: 50% từ bảng điểm môn học + 50% từ bài khảo sát thiên hướng
+            blended_score = 0.50 * course_avg + 0.50 * h_score
+            user_display = max(1.5, min(9.8, round(blended_score, 1)))
 
             radar_items.append(
                 RadarAxisItem(
@@ -300,32 +321,47 @@ def process_skill_assessment(request: CalculateMatchRequest) -> CalculateMatchRe
     for major_id, major_meta in MAJOR_BENCHMARKS.items():
         bench_vector = MLEngine.vectorize_benchmark(major_meta["key_skills"])
 
-        # 1. Đo góc Cosine Similarity
+        # 1. Điểm tương đồng môn học Cosine Similarity (0.0 - 1.0)
         norm_u = np.linalg.norm(user_vector)
         norm_b = np.linalg.norm(bench_vector)
 
         if norm_u == 0 or norm_b == 0:
-            raw_cosine = 0.35  # Mức sàn cơ bản
+            course_sim = 0.35  # Mức sàn cơ bản
         else:
-            raw_cosine = float(np.dot(user_vector, bench_vector) / (norm_u * norm_b))
+            course_sim = float(np.dot(user_vector, bench_vector) / (norm_u * norm_b))
 
-        # 2. Điều chỉnh theo trắc nghiệm Holland Code
-        holland_multiplier = MLEngine.calculate_holland_factor(
-            request.holland_scores,
-            major_meta["holland_ideal"]
-        )
+        # 2. Điểm tương đồng thiên hướng Holland RIASEC (0.0 - 1.0)
+        user_vals = np.array([
+            float(getattr(request.holland_scores, "realistic", 3.0)),
+            float(getattr(request.holland_scores, "investigative", 3.0)),
+            float(getattr(request.holland_scores, "artistic", 3.0)),
+            float(getattr(request.holland_scores, "social", 3.0)),
+            float(getattr(request.holland_scores, "enterprising", 3.0)),
+            float(getattr(request.holland_scores, "conventional", 3.0))
+        ])
+        ideal_vals = np.array([
+            major_meta["holland_ideal"]["realistic"],
+            major_meta["holland_ideal"]["investigative"],
+            major_meta["holland_ideal"]["artistic"],
+            major_meta["holland_ideal"]["social"],
+            major_meta["holland_ideal"]["enterprising"],
+            major_meta["holland_ideal"]["conventional"]
+        ])
+        norm_uv = np.linalg.norm(user_vals)
+        norm_iv = np.linalg.norm(ideal_vals)
+        holland_sim = float(np.dot(user_vals, ideal_vals) / (norm_uv * norm_iv)) if norm_uv > 0 and norm_iv > 0 else 0.5
 
-        # 3. Ưu tiên các thẻ định hướng người dùng đã chọn
-        tag_bonus = 1.0
+        # 3. Điểm phù hợp thẻ nghề nghiệp mục tiêu đã chọn
+        tag_match_score = 0.5
         for tag in request.target_career_tags:
             tag_clean = tag.upper().replace(" ", "_")
             if tag_clean in major_id or major_id in tag_clean:
-                tag_bonus = 1.15
+                tag_match_score = 1.0
                 break
 
-        # 4. Tính toán điểm Match Score % cuối cùng
-        final_percentage = raw_cosine * holland_multiplier * tag_bonus * 100.0
-        final_percentage = min(98.5, max(35.0, round(final_percentage, 1)))
+        # 4. Trọng số tổng hợp: 45% Nền tảng học tập + 40% Thiên hướng cá nhân + 15% Mục tiêu nghề
+        weighted_score = (0.45 * course_sim + 0.40 * holland_sim + 0.15 * tag_match_score) * 100.0
+        final_percentage = min(98.5, max(38.0, round(weighted_score, 1)))
 
         match_scores_raw.append((major_id, major_meta["name"], final_percentage))
 
@@ -334,7 +370,7 @@ def process_skill_assessment(request: CalculateMatchRequest) -> CalculateMatchRe
 
     for rank, (m_id, m_name, score) in enumerate(match_scores_raw, start=1):
         m_meta = MAJOR_BENCHMARKS[m_id]
-        m_radar = MLEngine.compute_radar_axes(user_vector, m_meta["axes_weights"])
+        m_radar = MLEngine.compute_radar_axes(user_vector, m_meta["axes_weights"], request.holland_scores)
         m_skills = MLEngine.analyze_skill_breakdown(user_vector, m_meta["key_skills"])
 
         ranked_matches.append(

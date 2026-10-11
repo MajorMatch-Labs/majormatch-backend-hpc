@@ -67,6 +67,17 @@ def init_db():
     );
     """)
 
+    # 4. Bảng lưu trữ lịch sử đoạn chat với trợ lý AI
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS chat_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+    """)
+
     conn.commit()
     conn.close()
 
@@ -153,7 +164,7 @@ def update_roadmap_progress(
     completed_items: Dict[str, bool],
     readiness_score: float
 ) -> bool:
-    """Cập nhật tiến độ hoàn thành các checkbox môn học/đồ án và điểm sẵn sàng vào CSDL."""
+    """Cập nhật tiến độ hoàn thành các checkbox môn học/đồ án và điểm sẵn sàng vào CSDL & tự động đồng bộ sang bảng assessments."""
     conn = get_db_connection()
     now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     completed_str = json.dumps(completed_items)
@@ -167,6 +178,54 @@ def update_roadmap_progress(
         WHERE student_id = ?;
         """, (completed_str, readiness_score, now_str, student_id))
         updated = cursor.rowcount > 0
+
+        # Tự động hòa trộn tiến độ vào bảng assessments nếu có
+        try:
+            r_row = conn.execute("SELECT target_major_id FROM roadmaps WHERE student_id = ?", (student_id,)).fetchone()
+            a_row = conn.execute("SELECT assessment_data, target_career FROM assessments WHERE student_id = ?", (student_id,)).fetchone()
+            if r_row and a_row:
+                target_major_id = r_row["target_major_id"]
+                data = json.loads(a_row["assessment_data"])
+                matches = data.get("top_matches", [])
+                for m in matches:
+                    if m.get("major_id") == target_major_id:
+                        m["match_percentage"] = round(readiness_score, 1)
+                        m["match_score"] = round(readiness_score, 1)
+                        sg = m.get("skill_gap", {})
+                        raw_missing = sg.get("missing_skills", [])
+                        raw_mastered = sg.get("mastered_skills", [])
+
+                        if readiness_score >= 99.5:
+                            all_s = raw_mastered + raw_missing
+                            sg["mastered_skills"] = list(dict.fromkeys(all_s))
+                            sg["missing_skills"] = []
+                            for axis in m.get("radar_data", []):
+                                axis["user_score"] = max(axis.get("benchmark_score", 8.0), 9.5)
+                            # Đưa lên xếp hạng #1
+                            matches.remove(m)
+                            matches.insert(0, m)
+                            for idx, item in enumerate(matches):
+                                item["rank"] = idx + 1
+                            data["skill_breakdown"] = sg
+                            data["radar_chart_data"] = m.get("radar_data", [])
+                        else:
+                            total_s = max(len(raw_missing) + len(raw_mastered), 1)
+                            frac = min(1.0, max(0.0, readiness_score / 100.0))
+                            target_mastered_count = int(frac * total_s)
+                            all_skills = list(dict.fromkeys(raw_mastered + raw_missing))
+                            sg["mastered_skills"] = all_skills[:target_mastered_count]
+                            sg["missing_skills"] = all_skills[target_mastered_count:]
+
+                        m["skill_gap"] = sg
+                        break
+                data["top_matches"] = matches
+                conn.execute(
+                    "UPDATE assessments SET assessment_data = ?, updated_at = ? WHERE student_id = ?",
+                    (json.dumps(data, ensure_ascii=False), now_str, student_id)
+                )
+        except Exception:
+            pass
+
     conn.close()
     return updated
 
@@ -219,3 +278,52 @@ def get_assessment(student_id: str) -> Optional[Dict[str, Any]]:
         "assessment": data,
         "updated_at": row["updated_at"]
     }
+
+
+# =============================================================================
+# CÁC THAO TÁC CRUD CHO LỊCH SỬ CHAT (CHAT HISTORY)
+# =============================================================================
+
+def save_chat_message(student_id: str, role: str, content: str) -> None:
+    """Lưu một tin nhắn hội thoại vào CSDL SQLite."""
+    conn = get_db_connection()
+    now_str = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    with conn:
+        conn.execute("""
+        INSERT INTO chat_history (student_id, role, content, created_at)
+        VALUES (?, ?, ?, ?);
+        """, (student_id, role, content, now_str))
+    conn.close()
+
+
+def get_chat_history(student_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+    """Truy xuất lịch sử hội thoại của sinh viên theo thứ tự thời gian."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT role, content, created_at
+    FROM chat_history
+    WHERE student_id = ?
+    ORDER BY id ASC
+    LIMIT ?;
+    """, (student_id, limit))
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [
+        {
+            "role": row["role"],
+            "content": row["content"],
+            "created_at": row["created_at"]
+        }
+        for row in rows
+    ]
+
+
+def clear_chat_history(student_id: str) -> None:
+    """Xóa lịch sử chat của sinh viên."""
+    conn = get_db_connection()
+    with conn:
+        conn.execute("DELETE FROM chat_history WHERE student_id = ?;", (student_id,))
+    conn.close()
+

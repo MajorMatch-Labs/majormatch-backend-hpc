@@ -32,7 +32,16 @@ from schemas import (
 from parser import parse_transcript_document
 from ml_engine import process_skill_assessment
 from rag_service import OllamaAIService, chroma_service, OLLAMA_BASE_URL, OLLAMA_MODEL
-from database import init_db, save_roadmap, get_roadmap, update_roadmap_progress, save_assessment, get_assessment
+from database import (
+    init_db,
+    save_roadmap,
+    get_roadmap,
+    update_roadmap_progress,
+    save_assessment,
+    get_assessment,
+    save_chat_message,
+    get_chat_history
+)
 
 # Khởi tạo CSDL SQLite bền vững
 init_db()
@@ -130,17 +139,62 @@ async def upload_transcript(
 @app.post(
     "/api/v1/assessment/calculate-match",
     response_model=CalculateMatchResponse,
-    summary="Tính toán Cosine Similarity, % Phù hợp và Tọa độ Radar Chart",
+    summary="Tính toán Cosine Similarity, % Phù hợp và Tọa độ Radar Chart & Lưu CSDL SQLite",
     tags=["Assessment"]
 )
 async def calculate_match(request_body: CalculateMatchRequest):
     try:
         result = await run_in_threadpool(process_skill_assessment, request_body)
+        student_id = getattr(request_body, "student_id", "SV-2025001")
+
+        # Lưu vĩnh viễn kết quả đánh giá kỹ năng vào CSDL SQLite
+        save_assessment(
+            student_id=student_id,
+            target_career=",".join(request_body.target_career_tags),
+            assessment_dict=result.model_dump()
+        )
+
         return result
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Lỗi tính toán mô hình học máy: {str(e)}"
+        )
+
+
+@app.get(
+    "/api/v1/assessment/{student_id}",
+    summary="Truy xuất kết quả đánh giá khoảng cách kỹ năng đã lưu từ CSDL SQLite",
+    tags=["Assessment"]
+)
+async def get_assessment_endpoint(student_id: str):
+    record = get_assessment(student_id)
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Chưa có kết quả đánh giá kỹ năng nào được lưu cho sinh viên {student_id}."
+        )
+    return record["assessment"]
+
+
+@app.post(
+    "/api/v1/assessment/{student_id}",
+    summary="Lưu hoặc cập nhật kết quả đánh giá kỹ năng vào CSDL SQLite",
+    tags=["Assessment"]
+)
+async def save_assessment_endpoint(student_id: str, request_body: Dict[str, Any]):
+    try:
+        target_career = str(request_body.get("target_career", "devops_cloud"))
+        save_assessment(
+            student_id=student_id,
+            target_career=target_career,
+            assessment_dict=request_body
+        )
+        return {"status": "success", "student_id": student_id}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi lưu trữ đánh giá kỹ năng: {str(e)}"
         )
 
 
@@ -231,6 +285,34 @@ async def chat_stream(request_body: ChatStreamRequest):
             "X-Accel-Buffering": "no"
         }
     )
+
+
+@app.get(
+    "/api/v1/chat/history/{student_id}",
+    summary="Truy xuất lịch sử đoạn chat của sinh viên với trợ lý AI",
+    tags=["Assistant"]
+)
+async def get_chat_history_endpoint(student_id: str):
+    history = get_chat_history(student_id)
+    return {"student_id": student_id, "messages": history}
+
+
+@app.post(
+    "/api/v1/chat/history/{student_id}",
+    summary="Lưu trữ tin nhắn vào lịch sử hội thoại CSDL",
+    tags=["Assistant"]
+)
+async def save_chat_message_endpoint(student_id: str, request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    role = str(data.get("role", "user"))
+    content = str(data.get("content", ""))
+    if content:
+        save_chat_message(student_id, role, content)
+    return {"status": "success", "student_id": student_id}
+
 
 
 # =============================================================================
